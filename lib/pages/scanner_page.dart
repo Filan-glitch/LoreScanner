@@ -24,6 +24,12 @@ class _ScannerPageState extends State<ScannerPage> {
     });
   }
 
+  @override
+  void dispose() {
+    _cameraController.dispose();
+    super.dispose();
+  }
+
   Future<void> _initializeCameras() async {
     final cameras = await availableCameras();
     setState(() {
@@ -58,12 +64,6 @@ class _ScannerPageState extends State<ScannerPage> {
     } catch (e) {
       print('Error initializing camera: $e');
     }
-  }
-
-  @override
-  void dispose() {
-    _cameraController.dispose();
-    super.dispose();
   }
 
   @override
