@@ -120,7 +120,7 @@ class _SplashWrapperState extends State<SplashWrapper> {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withAlpha(51),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -154,7 +154,7 @@ class _SplashWrapperState extends State<SplashWrapper> {
               Text(
                 _initializationStatus,
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onPrimary.withOpacity(0.8),
+                  color: theme.colorScheme.onPrimary.withAlpha(204),
                 ),
                 textAlign: TextAlign.center,
               ),

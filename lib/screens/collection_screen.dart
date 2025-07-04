@@ -45,7 +45,7 @@ class CollectionScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                  color: theme.colorScheme.primaryContainer.withAlpha(77),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -67,7 +67,7 @@ class CollectionScreen extends StatelessWidget {
               Text(
                 'Scanne Karten, um sie zu deiner Sammlung hinzuzufügen',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                  color: theme.colorScheme.onSurface.withAlpha(179),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -99,7 +99,7 @@ class CollectionScreen extends StatelessWidget {
               Container(
                 height: 40,
                 width: 1,
-                color: theme.colorScheme.onPrimaryContainer.withOpacity(0.2),
+                color: theme.colorScheme.onPrimaryContainer.withAlpha(51),
               ),
               _buildStatItem(
                 context,
@@ -141,7 +141,7 @@ class CollectionScreen extends StatelessWidget {
                     child: Text(
                       entry.card.setCode,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                        color: theme.colorScheme.onSurface.withAlpha(153),
                       ),
                     ),
                   ),
@@ -216,7 +216,7 @@ class CollectionScreen extends StatelessWidget {
         Text(
           label,
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onPrimaryContainer.withOpacity(0.8),
+            color: theme.colorScheme.onPrimaryContainer.withAlpha(204),
           ),
         ),
       ],

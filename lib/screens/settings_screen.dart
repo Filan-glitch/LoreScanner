@@ -37,7 +37,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      color: theme.colorScheme.primary.withAlpha(26),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Image.asset(
@@ -58,7 +58,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     'Finn Dilan',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      color: theme.colorScheme.onSurface.withAlpha(179),
                     ),
                   ),
                 ],
@@ -147,7 +147,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.2),
+          color: theme.colorScheme.outline.withAlpha(51),
         ),
       ),
       child: Column(

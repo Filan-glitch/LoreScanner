@@ -86,7 +86,7 @@ class ThemeShowcase extends StatelessWidget {
         color: theme.colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.2),
+          color: theme.colorScheme.outline.withAlpha(51),
         ),
       ),
       child: Column(
@@ -121,7 +121,7 @@ class ThemeShowcase extends StatelessWidget {
             color: color,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: theme.colorScheme.outline.withOpacity(0.5),
+              color: theme.colorScheme.outline.withAlpha(128),
             ),
           ),
         ),

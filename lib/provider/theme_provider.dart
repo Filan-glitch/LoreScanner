@@ -60,7 +60,7 @@ class ThemeProvider with ChangeNotifier {
       ),
       cardTheme: CardTheme(
         elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.1),
+        shadowColor: Colors.black.withAlpha(26),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -114,7 +114,7 @@ class ThemeProvider with ChangeNotifier {
       ),
       cardTheme: CardTheme(
         elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.3),
+        shadowColor: Colors.black.withAlpha(77),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),

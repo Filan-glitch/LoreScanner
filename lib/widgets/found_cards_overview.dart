@@ -44,7 +44,7 @@ class FoundCardsOverview extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: theme.colorScheme.errorContainer.withOpacity(0.3),
+              color: theme.colorScheme.errorContainer.withAlpha(77),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -65,7 +65,7 @@ class FoundCardsOverview extends StatelessWidget {
           Text(
             'Versuche es mit einem anderen Bild',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withAlpha(179),
             ),
           ),
         ],
@@ -118,7 +118,7 @@ class FoundCardsOverview extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: theme.colorScheme.shadow.withOpacity(0.1),
+              color: theme.colorScheme.shadow.withAlpha(26),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -158,7 +158,7 @@ class FoundCardsOverview extends StatelessWidget {
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        Colors.black.withOpacity(0.8),
+                        Colors.black.withAlpha(204),
                         Colors.transparent,
                       ],
                     ),
