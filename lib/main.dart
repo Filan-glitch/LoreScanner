@@ -30,8 +30,33 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         ),
-        home: const HomePage(),
+        home: const AppInitializer(),
       ),
     );
+  }
+}
+
+class AppInitializer extends StatefulWidget {
+  const AppInitializer({super.key});
+
+  @override
+  State<AppInitializer> createState() => _AppInitializerState();
+}
+
+class _AppInitializerState extends State<AppInitializer> {
+  @override
+  void initState() {
+    super.initState();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    final cardsProvider = context.read<CardsProvider>();
+    await cardsProvider.loadCollection();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const HomePage();
   }
 }
