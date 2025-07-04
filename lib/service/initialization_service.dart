@@ -1,5 +1,4 @@
 import 'package:camera/camera.dart';
-import 'package:flutter/material.dart';
 import 'package:lorescanner/models/card.dart';
 import 'package:lorescanner/models/collection.dart';
 import 'package:lorescanner/service/database.dart';

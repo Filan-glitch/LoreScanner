@@ -134,7 +134,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
                 }).catchError((error) {
                   print('Error analyzing image: $error');
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Fehler beim Analysieren des Bildes')),
+                    const SnackBar(content: Text('Fehler beim Analysieren des Bildes')),
                   );
                 });
               }

@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -11,7 +10,7 @@ Future<Database> openDB() async {
   return openDatabase(
     path,
     version: 1,
-    onCreate: (Database database, int version) async {
+    onOpen: (Database database) async {
       await database.execute('''
         CREATE TABLE IF NOT EXISTS cards (
           id INTEGER PRIMARY KEY,
@@ -89,7 +88,7 @@ Future<Map<int, Map<String, int>>> fetchCollectionFromDB() async {
   final List<Map<String, dynamic>> maps = await db.query('collection');
   await db.close();
 
-  Map<int, Map<String, int>> collection = {};
+  final Map<int, Map<String, int>> collection = {};
   for (var map in maps) {
     collection[map['cardId']] = {
       'amount': map['amount'],

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart' hide Card;
-import 'package:lorescanner/models/card.dart';
 import 'package:lorescanner/widgets/splash_wrapper.dart';
 import 'package:provider/provider.dart';
 import 'package:lorescanner/provider/cards_provider.dart';
