@@ -225,8 +225,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _showThemeDialog(BuildContext context, ThemeProvider themeProvider) async {
-    final theme = Theme.of(context);
-    
     await showDialog(
       context: context,
       builder: (context) {
@@ -280,8 +278,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ThemeMode currentMode,
     Function(ThemeMode) onChanged,
   ) {
-    final theme = Theme.of(context);
-    
     return RadioListTile<ThemeMode>(
       title: Row(
         children: [

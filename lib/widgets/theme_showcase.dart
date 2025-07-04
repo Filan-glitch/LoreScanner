@@ -2,7 +2,6 @@
 // This file provides a quick overview of the theme system implementation
 
 import 'package:flutter/material.dart';
-import 'package:lorescanner/provider/theme_provider.dart';
 
 class ThemeShowcase extends StatelessWidget {
   const ThemeShowcase({super.key});
@@ -61,12 +60,12 @@ class ThemeShowcase extends StatelessWidget {
                 child: const Text('Text Button'),
               ),
               const SizedBox(height: 8),
-              Card(
+              const Card(
                 child: ListTile(
-                  leading: const Icon(Icons.star),
-                  title: const Text('Card with ListTile'),
-                  subtitle: const Text('Subtitle text'),
-                  trailing: const Icon(Icons.chevron_right),
+                  leading: Icon(Icons.star),
+                  title: Text('Card with ListTile'),
+                  subtitle: Text('Subtitle text'),
+                  trailing: Icon(Icons.chevron_right),
                 ),
               ),
             ],

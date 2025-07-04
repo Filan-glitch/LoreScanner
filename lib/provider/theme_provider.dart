@@ -58,7 +58,7 @@ class ThemeProvider with ChangeNotifier {
         elevation: 0,
         scrolledUnderElevation: 1,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 2,
         shadowColor: Colors.black.withAlpha(26),
         shape: RoundedRectangleBorder(
@@ -87,7 +87,7 @@ class ThemeProvider with ChangeNotifier {
           ),
         ),
       ),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
@@ -112,7 +112,7 @@ class ThemeProvider with ChangeNotifier {
         elevation: 0,
         scrolledUnderElevation: 1,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 2,
         shadowColor: Colors.black.withAlpha(77),
         shape: RoundedRectangleBorder(
@@ -141,7 +141,7 @@ class ThemeProvider with ChangeNotifier {
           ),
         ),
       ),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
