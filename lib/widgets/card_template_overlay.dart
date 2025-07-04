@@ -22,12 +22,12 @@ class CardTemplatePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.8)
+      ..color = Colors.white.withAlpha(204)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0;
     
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.3)
+      ..color = Colors.black.withAlpha(77)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 5.0;
 
@@ -66,7 +66,7 @@ class CardTemplatePainter extends CustomPainter {
     const guideOffset = 10.0;
     
     final guidePaint = Paint()
-      ..color = Colors.yellow.withOpacity(0.9)
+      ..color = Colors.yellow.withAlpha(230)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
     
