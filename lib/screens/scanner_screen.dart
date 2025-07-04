@@ -272,7 +272,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
               children: [
                 CircularProgressIndicator(),
                 SizedBox(height: 20),
-                Text('Analysiere Bild...'),
+                Text('Karte wird gescannt...'),
               ],
             ),
           )

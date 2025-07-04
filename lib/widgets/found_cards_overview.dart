@@ -111,7 +111,10 @@ class FoundCardsOverview extends StatelessWidget {
     final theme = Theme.of(context);
     
     return GestureDetector(
-      onTap: () => _showCardSelectionDialog(context, card),
+      onTap: () async {
+        final result = await _showCardSelectionDialog(context, card);
+        Navigator.pop(context, result);
+      },
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
@@ -225,10 +228,10 @@ class FoundCardsOverview extends StatelessWidget {
     );
   }
 
-  void _showCardSelectionDialog(BuildContext context, lore.Card card) {
+  Future<dynamic> _showCardSelectionDialog(BuildContext context, lore.Card card) async {
     final theme = Theme.of(context);
     
-    showDialog(
+    return await showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -247,7 +250,6 @@ class FoundCardsOverview extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        Navigator.pop(context);
                         Navigator.pop(context, {'card': card, 'foil': false});
                       },
                       icon: const Icon(Icons.credit_card),
@@ -262,7 +264,6 @@ class FoundCardsOverview extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        Navigator.pop(context);
                         Navigator.pop(context, {'card': card, 'foil': true});
                       },
                       icon: const Icon(Icons.auto_awesome),
