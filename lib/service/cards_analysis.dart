@@ -1,7 +1,11 @@
 import 'dart:io';
 import 'dart:ui' as ui;
+import 'dart:typed_data';
 
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:image/image.dart' as img;
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
 import '../models/card.dart';
 
@@ -96,10 +100,51 @@ Future<InputImage> _prepareImage(String imagePath, ui.Rect? cropRegion) async {
     return InputImage.fromFile(file);
   }
   
-  // For now, we'll use the original image since cropping requires more complex image processing
-  // In a production app, you might want to use a package like 'image' for cropping
-  // TODO: Implement actual image cropping based on cropRegion
-  return InputImage.fromFile(file);
+  try {
+    // Read the original image
+    final bytes = await file.readAsBytes();
+    final originalImage = img.decodeImage(bytes);
+    
+    if (originalImage == null) {
+      print('Could not decode image for cropping, using original');
+      return InputImage.fromFile(file);
+    }
+    
+    // Calculate crop boundaries based on the ROI region
+    // Note: cropRegion is in screen coordinates, we need to map to image coordinates
+    final imageWidth = originalImage.width;
+    final imageHeight = originalImage.height;
+    
+    // For now, use a simple mapping assuming the ROI is centered
+    // In a production app, you'd want to consider the actual camera preview scaling
+    final cropX = (cropRegion.left * imageWidth / 375).round().clamp(0, imageWidth);
+    final cropY = (cropRegion.top * imageHeight / 667).round().clamp(0, imageHeight);
+    final cropWidth = (cropRegion.width * imageWidth / 375).round().clamp(0, imageWidth - cropX);
+    final cropHeight = (cropRegion.height * imageHeight / 667).round().clamp(0, imageHeight - cropY);
+    
+    // Crop the image
+    final croppedImage = img.copyCrop(
+      originalImage,
+      x: cropX,
+      y: cropY,
+      width: cropWidth,
+      height: cropHeight,
+    );
+    
+    // Save the cropped image to a temporary file
+    final tempDir = await getTemporaryDirectory();
+    final tempPath = path.join(tempDir.path, 'cropped_${DateTime.now().millisecondsSinceEpoch}.jpg');
+    final croppedFile = File(tempPath);
+    
+    await croppedFile.writeAsBytes(img.encodeJpg(croppedImage));
+    
+    print('Image cropped from ${imageWidth}x${imageHeight} to ${cropWidth}x${cropHeight}');
+    
+    return InputImage.fromFile(croppedFile);
+  } catch (e) {
+    print('Error cropping image: $e, using original');
+    return InputImage.fromFile(file);
+  }
 }
 
 /// Finds cards that match the recognized text
