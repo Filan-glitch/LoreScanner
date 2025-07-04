@@ -93,6 +93,8 @@ class _SplashWrapperState extends State<SplashWrapper> {
       return const HomePage();
     }
 
+    final theme = Theme.of(context);
+    
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -100,8 +102,8 @@ class _SplashWrapperState extends State<SplashWrapper> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.secondary,
+              theme.colorScheme.primary,
+              theme.colorScheme.secondary,
             ],
           ),
         ),
@@ -114,48 +116,47 @@ class _SplashWrapperState extends State<SplashWrapper> {
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
+                  color: theme.colorScheme.onPrimary,
+                  borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.2),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
                   ],
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.camera_alt,
                   size: 60,
-                  color: Colors.deepPurple,
+                  color: theme.colorScheme.primary,
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 48),
               
               // App title
-              const Text(
+              Text(
                 'Lore Scanner',
-                style: TextStyle(
-                  fontSize: 32,
+                style: theme.textTheme.headlineLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: theme.colorScheme.onPrimary,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               
               // Loading indicator
-              const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onPrimary),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               
               // Status text
               Text(
                 _initializationStatus,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.white70,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onPrimary.withOpacity(0.8),
                 ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),

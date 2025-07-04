@@ -14,14 +14,14 @@ class HomePage extends StatelessWidget {
         PersistentTabConfig(
           screen: const ScannerScreen(),
           item: ItemConfig(
-            icon: const Icon(Icons.home),
+            icon: const Icon(Icons.camera_alt),
             title: 'Scanner',
           ),
         ),
         PersistentTabConfig(
           screen: const CollectionScreen(),
           item: ItemConfig(
-            icon: const Icon(Icons.message),
+            icon: const Icon(Icons.collections_bookmark),
             title: 'Sammlung',
           ),
         ),
