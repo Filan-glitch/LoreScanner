@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
-import 'package:path/path.dart';
 
 import '../models/card.dart';
 
@@ -11,7 +10,7 @@ Future<Set<Card>> analyzeImage(File file, List<Card> cards) async {
 
   final RecognizedText recognizedText =
   await textRecognizer.processImage(inputImage);
-  String text = recognizedText.text;
+  final String text = recognizedText.text;
   print('Recognized text: $text');
 
   // Find Cards

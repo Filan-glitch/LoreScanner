@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart' hide Card;
 import 'package:lorescanner/models/card.dart';
 import 'package:lorescanner/models/collection.dart';
@@ -18,36 +17,22 @@ class CardsProvider extends ChangeNotifier {
     notifyListeners();
     
     try {
-      final collectionData = await db.fetchCollectionFromDB();
-      final List<CollectionEntry> entries = collectionData.map((data) {
-        // Parse images - they're stored as JSON strings in the database
-        Map<String, String> images = {};
-        try {
-          if (data['images'] is String) {
-            final Map<String, dynamic> imageMap = jsonDecode(data['images'] as String);
-            images = imageMap.cast<String, String>();
-          } else if (data['images'] is Map) {
-            images = (data['images'] as Map).cast<String, String>();
-          }
-        } catch (e) {
-          print('Error parsing images for card ${data['id']}: $e');
-          images = {};
+      // Fetch all cards and the collection map
+      final List<Card> allCards = await db.fetchCardsFromDB();
+      final Map<int, Map<String, int>> collectionData = await db.fetchCollectionFromDB();
+      final List<CollectionEntry> entries = [];
+
+      for (final card in allCards) {
+        final entryData = collectionData[card.id];
+        if (entryData != null) {
+          entries.add(CollectionEntry(
+            card: card,
+            amount: entryData['amount'] ?? 0,
+            amountFoil: entryData['amountFoil'] ?? 0,
+          ));
         }
-        
-        final card = Card(
-          id: data['id'],
-          setCode: data['setCode'] ?? '',
-          simpleName: data['simpleName'] ?? '',
-          images: images,
-          language: data['language'] ?? 'de',
-        );
-        return CollectionEntry(
-          card: card,
-          amount: data['amount'] ?? 0,
-          amountFoil: data['amountFoil'] ?? 0,
-        );
-      }).toList();
-      
+      }
+
       _collection = Collection(entries: entries);
     } catch (e) {
       print('Error loading collection: $e');
@@ -76,6 +61,11 @@ class CardsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setCollection(Collection newCollection) {
+    _collection = newCollection;
+    notifyListeners();
+  }
+
   void clearCards() {
     _cards = [];
     notifyListeners();
@@ -90,4 +80,3 @@ class CardsProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
-

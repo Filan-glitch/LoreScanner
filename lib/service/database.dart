@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -10,8 +9,8 @@ Future<Database> openDB() async {
   final String path = join(databasesPath, 'lorcana.db');
   return openDatabase(
     path,
-    version: 2, // Increased version for migration
-    onCreate: (Database database, int version) async {
+    version: 1,
+    onOpen: (Database database) async {
       await database.execute('''
         CREATE TABLE IF NOT EXISTS cards (
           id INTEGER PRIMARY KEY,
@@ -30,14 +29,6 @@ Future<Database> openDB() async {
           FOREIGN KEY (cardId) REFERENCES cards (id)
         );
         ''');
-    },
-    onUpgrade: (Database database, int oldVersion, int newVersion) async {
-      if (oldVersion < 2) {
-        // Add language column if it doesn't exist
-        await database.execute('''
-          ALTER TABLE cards ADD COLUMN language TEXT DEFAULT 'de';
-        ''');
-      }
     },
   );
 }
@@ -92,29 +83,17 @@ Future<List<Card>> fetchCardsFromDB() async {
   });
 }
 
-Future<List<Map<String, dynamic>>> fetchCollectionFromDB() async {
+Future<Map<int, Map<String, int>>> fetchCollectionFromDB() async {
   final Database db = await openDB();
-  List<Map<String, dynamic>> collectionMaps = [];
-  
-  try {
-    // Try to select with language column first
-    collectionMaps = await db.rawQuery('''
-      SELECT c.id, c.images, c.setCode, c.simpleName, c.language, col.amount, col.amountFoil
-      FROM collection col
-      JOIN cards c ON col.cardId = c.id
-      WHERE col.amount > 0 OR col.amountFoil > 0
-    ''');
-  } catch (e) {
-    // If language column doesn't exist, fall back to query without it
-    print('Falling back to query without language column: $e');
-    collectionMaps = await db.rawQuery('''
-      SELECT c.id, c.images, c.setCode, c.simpleName, col.amount, col.amountFoil
-      FROM collection col
-      JOIN cards c ON col.cardId = c.id
-      WHERE col.amount > 0 OR col.amountFoil > 0
-    ''');
-  }
-  
+  final List<Map<String, dynamic>> maps = await db.query('collection');
   await db.close();
-  return collectionMaps;
+
+  final Map<int, Map<String, int>> collection = {};
+  for (var map in maps) {
+    collection[map['cardId']] = {
+      'amount': map['amount'],
+      'amountFoil': map['amountFoil'],
+    };
+  }
+  return collection;
 }

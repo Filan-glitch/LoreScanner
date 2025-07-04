@@ -20,13 +20,15 @@ class Collection {
   }
 
   void addCard(Card card, {int amount = 1, int amountFoil = 0}) {
-    final existingEntryIndex = entries.indexWhere((entry) => entry.card.id == card.id);
-    if (existingEntryIndex == -1) {
+    final entryIndex = entries.indexWhere((entry) => entry.card.id == card.id);
+
+    if (entryIndex == -1) {
       entries.add(CollectionEntry(card: card, amount: amount, amountFoil: amountFoil));
     } else {
-      entries[existingEntryIndex] = entries[existingEntryIndex].copyWith(
-        amount: entries[existingEntryIndex].amount + amount,
-        amountFoil: entries[existingEntryIndex].amountFoil + amountFoil,
+      final entry = entries[entryIndex];
+      entries[entryIndex] = entry.copyWith(
+        amount: entry.amount + amount,
+        amountFoil: entry.amountFoil + amountFoil,
       );
     }
   }

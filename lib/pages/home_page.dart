@@ -22,14 +22,14 @@ class HomePage extends StatelessWidget {
           screen: const CollectionScreen(),
           item: ItemConfig(
             icon: const Icon(Icons.message),
-            title: "Sammlung",
+            title: 'Sammlung',
           ),
         ),
         PersistentTabConfig(
           screen: const SettingsScreen(),
           item: ItemConfig(
             icon: const Icon(Icons.settings),
-            title: "Einstellungen",
+            title: 'Einstellungen',
           ),
         ),
       ],

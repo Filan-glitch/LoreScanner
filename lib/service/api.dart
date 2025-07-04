@@ -8,10 +8,15 @@ Future<List<Card>> fetchCards(String language) async {
 
   if (response.statusCode == 200) {
     final Map<String, dynamic> jsonData = json.decode(response.body);
-    // final Map<String, dynamic> metaData = jsonData['metadata'];
-    // final Map<String, dynamic> sets = jsonData['sets'];
+    final Map<String, dynamic> metaData = jsonData['metadata'] ?? {};
+    final String lang = metaData['language'] ?? language;
     final List<dynamic> cardsData = jsonData['cards'];
     final List<Card> cards = cardsData.map((card) {
+      // Inject language from metadata if not present
+      if (!card.containsKey('language')) {
+        card = Map<String, dynamic>.from(card);
+        card['language'] = lang;
+      }
       return CardMapper.fromMap(card);
     }).toList();
     return cards;

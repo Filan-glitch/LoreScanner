@@ -1,19 +1,13 @@
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart' hide Card;
-import 'package:lorescanner/models/card.dart';
-import 'package:lorescanner/pages/home_page.dart';
-import 'package:lorescanner/service/database.dart';
+import 'package:lorescanner/widgets/splash_wrapper.dart';
 import 'package:provider/provider.dart';
 import 'package:lorescanner/provider/cards_provider.dart';
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Ensure that the camera plugin is initialized before running the app
-  // This is necessary if you are using camera features in your app.
-  // If you are not using camera features, you can remove this line.
-  await availableCameras(); // Uncomment if you need camera initialization
-
+  // All initialization logic is now handled in InitializationService
+  // through the SplashWrapper widget
   runApp(const MyApp());
 }
 
@@ -30,33 +24,8 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         ),
-        home: const AppInitializer(),
+        home: const SplashWrapper(),
       ),
     );
-  }
-}
-
-class AppInitializer extends StatefulWidget {
-  const AppInitializer({super.key});
-
-  @override
-  State<AppInitializer> createState() => _AppInitializerState();
-}
-
-class _AppInitializerState extends State<AppInitializer> {
-  @override
-  void initState() {
-    super.initState();
-    _initializeApp();
-  }
-
-  Future<void> _initializeApp() async {
-    final cardsProvider = context.read<CardsProvider>();
-    await cardsProvider.loadCollection();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return const HomePage();
   }
 }

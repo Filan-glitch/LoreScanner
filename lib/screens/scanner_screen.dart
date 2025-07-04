@@ -2,8 +2,8 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart' hide Card;
 import 'package:lorescanner/models/card.dart';
-import 'package:lorescanner/service/database.dart';
 import 'package:lorescanner/widgets/found_cards_overview.dart';
+import 'package:lorescanner/service/initialization_service.dart';
 import 'package:provider/provider.dart';
 import 'package:lorescanner/provider/cards_provider.dart';
 
@@ -17,68 +17,57 @@ class ScannerScreen extends StatefulWidget {
 }
 
 class _ScannerScreenState extends State<ScannerScreen> {
-  List<CameraDescription> _cameras = [];
   late CameraController _cameraController;
-  List<Card> _allCards = [];
+  bool _isInitialized = false;
   bool loading = false;
+  final InitializationService _initService = InitializationService();
 
   @override
   void initState() {
     super.initState();
-    // Fetch the list of cards out of the db
-    fetchCardsFromDB().then((cards) {
-      setState(() {
-        _allCards = cards;
-      });
-    });
-    _initializeCameras().then((_) {
-      if (_cameras.isEmpty) {
-        print('No cameras found');
-        return;
-      }
-      _initializeCameraController();
-    });
+    _initializeCameraController();
   }
 
   @override
   void dispose() {
-    _cameraController.dispose();
+    if (_isInitialized) {
+      _cameraController.dispose();
+    }
     super.dispose();
   }
 
-  Future<void> _initializeCameras() async {
-    final cameras = await availableCameras();
-    setState(() {
-      _cameras = cameras;
-    });
-  }
-
   Future<void> _initializeCameraController() async {
+    // Get cameras from the centralized initialization service
+    final cameras = _initService.cameras;
+    if (cameras == null || cameras.isEmpty) {
+      print('No cameras available from initialization service');
+      return;
+    }
+
     _cameraController = CameraController(
-      _cameras[0],
+      cameras[0],
       ResolutionPreset.max,
     );
 
     try {
-      await _cameraController.initialize().then((_) {
-        if (!mounted) {
-          return;
-        }
-        setState(() {});
-      }).catchError((Object e) {
-        if (e is CameraException) {
-          switch (e.code) {
-            case 'CameraAccessDenied':
-            // Handle access errors here.
-              break;
-            default:
-            // Handle other errors here.
-              break;
-          }
-        }
-      });
+      await _cameraController.initialize();
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+        });
+      }
     } catch (e) {
-      print('Error initializing camera: $e');
+      print('Error initializing camera controller: $e');
+      if (e is CameraException) {
+        switch (e.code) {
+          case 'CameraAccessDenied':
+            // Handle access errors here.
+            break;
+          default:
+            // Handle other errors here.
+            break;
+        }
+      }
     }
   }
 
@@ -101,10 +90,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
   @override
   Widget build(BuildContext context) {
     final cardsProvider = context.watch<CardsProvider>();
-    _allCards = cardsProvider.cards;
-    if (_cameras.isEmpty || !_cameraController.value.isInitialized || _allCards.isEmpty) {
+    
+    // Check if everything is properly initialized
+    if (!_isInitialized || cardsProvider.cards.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Scan eine Karte...'),
@@ -143,7 +134,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
                 }).catchError((error) {
                   print('Error analyzing image: $error');
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Fehler beim Analysieren des Bildes')),
+                    const SnackBar(content: Text('Fehler beim Analysieren des Bildes')),
                   );
                 });
               }
