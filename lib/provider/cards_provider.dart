@@ -22,18 +22,24 @@ class CardsProvider extends ChangeNotifier {
       final List<CollectionEntry> entries = collectionData.map((data) {
         // Parse images - they're stored as JSON strings in the database
         Map<String, String> images = {};
-        if (data['images'] is String) {
-          final Map<String, dynamic> imageMap = jsonDecode(data['images'] as String);
-          images = imageMap.cast<String, String>();
-        } else if (data['images'] is Map) {
-          images = (data['images'] as Map).cast<String, String>();
+        try {
+          if (data['images'] is String) {
+            final Map<String, dynamic> imageMap = jsonDecode(data['images'] as String);
+            images = imageMap.cast<String, String>();
+          } else if (data['images'] is Map) {
+            images = (data['images'] as Map).cast<String, String>();
+          }
+        } catch (e) {
+          print('Error parsing images for card ${data['id']}: $e');
+          images = {};
         }
         
         final card = Card(
           id: data['id'],
-          setCode: data['setCode'],
-          simpleName: data['simpleName'],
+          setCode: data['setCode'] ?? '',
+          simpleName: data['simpleName'] ?? '',
           images: images,
+          language: data['language'] ?? 'de',
         );
         return CollectionEntry(
           card: card,
@@ -72,6 +78,15 @@ class CardsProvider extends ChangeNotifier {
 
   void clearCards() {
     _cards = [];
+    notifyListeners();
+  }
+
+  Future<void> refreshCollection() async {
+    await loadCollection();
+  }
+
+  void clearCollection() {
+    _collection = Collection(entries: []);
     notifyListeners();
   }
 }

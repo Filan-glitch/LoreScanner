@@ -10,6 +10,23 @@ class CollectionScreen extends StatelessWidget {
     final cardsProvider = context.watch<CardsProvider>();
     final collection = cardsProvider.collection;
     
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Sammlung'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () async {
+              await cardsProvider.refreshCollection();
+            },
+          ),
+        ],
+      ),
+      body: _buildBody(cardsProvider, collection),
+    );
+  }
+
+  Widget _buildBody(CardsProvider cardsProvider, collection) {
     if (cardsProvider.isLoadingCollection) {
       return const Center(
         child: CircularProgressIndicator(),
