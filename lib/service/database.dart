@@ -82,3 +82,16 @@ Future<List<Card>> fetchCardsFromDB() async {
     return CardMapper.fromMap(maps[i]);
   });
 }
+
+Future<List<Map<String, dynamic>>> fetchCollectionFromDB() async {
+  final Database db = await openDB();
+  final List<Map<String, dynamic>> collectionMaps = await db.rawQuery('''
+    SELECT c.id, c.images, c.setCode, c.simpleName, col.amount, col.amountFoil
+    FROM collection col
+    JOIN cards c ON col.cardId = c.id
+    WHERE col.amount > 0 OR col.amountFoil > 0
+  ''');
+  await db.close();
+
+  return collectionMaps;
+}
