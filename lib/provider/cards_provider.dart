@@ -20,6 +20,11 @@ class CardsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setCollection(Collection newCollection) {
+    _collection = newCollection;
+    notifyListeners();
+  }
+
   void clearCards() {
     _cards = [];
     notifyListeners();

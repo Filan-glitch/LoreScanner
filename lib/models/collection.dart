@@ -6,10 +6,13 @@ class Collection {
   Collection({required this.entries});
 
   CollectionEntry? getEntryByCard(Card card) {
-    return entries.firstWhere(
-      (entry) => entry.card.id == card.id,
-      orElse: () => CollectionEntry(card: card),
-    );
+    try {
+      return entries.firstWhere(
+        (entry) => entry.card.id == card.id,
+      );
+    } catch (e) {
+      return null;
+    }
   }
 
   int get totalCards {
@@ -17,11 +20,13 @@ class Collection {
   }
 
   void addCard(Card card, {int amount = 1, int amountFoil = 0}) {
-    final entry = getEntryByCard(card);
-    if (entry == null) {
+    final entryIndex = entries.indexWhere((entry) => entry.card.id == card.id);
+    
+    if (entryIndex == -1) {
       entries.add(CollectionEntry(card: card, amount: amount, amountFoil: amountFoil));
     } else {
-      entries[entries.indexOf(entry)] = entry.copyWith(
+      final entry = entries[entryIndex];
+      entries[entryIndex] = entry.copyWith(
         amount: entry.amount + amount,
         amountFoil: entry.amountFoil + amountFoil,
       );

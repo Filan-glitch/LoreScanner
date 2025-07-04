@@ -20,6 +20,7 @@ void main() {
       expect(service.isInitialized, false);
       expect(service.cameras, null);
       expect(service.cards, null);
+      expect(service.collection, null);
     });
 
     test('should reset state correctly', () {
@@ -27,6 +28,7 @@ void main() {
       expect(service.isInitialized, false);
       expect(service.cameras, null);
       expect(service.cards, null);
+      expect(service.collection, null);
     });
 
     // Note: Full initialization tests would require mocking camera and database dependencies

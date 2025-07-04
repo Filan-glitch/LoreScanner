@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:lorescanner/models/card.dart';
+import 'package:lorescanner/models/collection.dart';
 import 'package:lorescanner/service/database.dart';
 import 'package:lorescanner/provider/cards_provider.dart';
 
@@ -12,10 +13,12 @@ class InitializationService {
 
   List<CameraDescription>? _cameras;
   List<Card>? _cards;
+  Collection? _collection;
   bool _isInitialized = false;
 
   List<CameraDescription>? get cameras => _cameras;
   List<Card>? get cards => _cards;
+  Collection? get collection => _collection;
   bool get isInitialized => _isInitialized;
 
   /// Initialize all app dependencies and services
@@ -28,6 +31,9 @@ class InitializationService {
       
       // Initialize database and fetch cards
       await _initializeDatabase();
+      
+      // Initialize collection data
+      await _initializeCollection();
       
       _isInitialized = true;
     } catch (e) {
@@ -59,10 +65,39 @@ class InitializationService {
     }
   }
 
-  /// Initialize the CardsProvider with fetched cards
+  /// Initialize collection data
+  Future<void> _initializeCollection() async {
+    try {
+      final collectionData = await fetchCollectionFromDB();
+      final List<CollectionEntry> entries = [];
+      
+      if (_cards != null) {
+        for (final card in _cards!) {
+          if (collectionData.containsKey(card.id)) {
+            final data = collectionData[card.id]!;
+            entries.add(CollectionEntry(
+              card: card,
+              amount: data['amount']!,
+              amountFoil: data['amountFoil']!,
+            ));
+          }
+        }
+      }
+      
+      _collection = Collection(entries: entries);
+    } catch (e) {
+      print('Error initializing collection: $e');
+      rethrow;
+    }
+  }
+
+  /// Initialize the CardsProvider with fetched cards and collection
   void initializeCardsProvider(CardsProvider provider) {
     if (_cards != null) {
       provider.setCards(_cards!);
+    }
+    if (_collection != null) {
+      provider.setCollection(_collection!);
     }
   }
 
@@ -70,6 +105,7 @@ class InitializationService {
   void reset() {
     _cameras = null;
     _cards = null;
+    _collection = null;
     _isInitialized = false;
   }
 }

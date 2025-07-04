@@ -82,3 +82,18 @@ Future<List<Card>> fetchCardsFromDB() async {
     return CardMapper.fromMap(maps[i]);
   });
 }
+
+Future<Map<int, Map<String, int>>> fetchCollectionFromDB() async {
+  final Database db = await openDB();
+  final List<Map<String, dynamic>> maps = await db.query('collection');
+  await db.close();
+
+  Map<int, Map<String, int>> collection = {};
+  for (var map in maps) {
+    collection[map['cardId']] = {
+      'amount': map['amount'],
+      'amountFoil': map['amountFoil'],
+    };
+  }
+  return collection;
+}

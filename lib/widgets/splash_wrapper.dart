@@ -34,10 +34,10 @@ class _SplashWrapperState extends State<SplashWrapper> {
       await _initService.initialize();
       
       setState(() {
-        _initializationStatus = 'Loading cards...';
+        _initializationStatus = 'Loading cards and collection...';
       });
       
-      // Initialize CardsProvider with fetched cards
+      // Initialize CardsProvider with fetched cards and collection
       if (mounted) {
         final cardsProvider = context.read<CardsProvider>();
         _initService.initializeCardsProvider(cardsProvider);
