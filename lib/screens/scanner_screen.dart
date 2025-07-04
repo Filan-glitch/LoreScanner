@@ -121,7 +121,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
                     final Card card = map['card'];
                     final bool foil = map['foil'];
                     // Save the card to the database
-                    cardsProvider.addCardToCollection(
+                    await cardsProvider.addCardToCollection(
                       card,
                       amount: foil ? 0 : 1,
                       amountFoil: foil ? 1 : 0,

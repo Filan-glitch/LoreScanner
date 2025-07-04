@@ -17,7 +17,8 @@ Future<Database> openDB() async {
           id INTEGER PRIMARY KEY,
           images TEXT,
           setCode TEXT,
-          simpleName TEXT
+          simpleName TEXT,
+          language TEXT DEFAULT 'de'
         );
       ''');
       await database.execute(

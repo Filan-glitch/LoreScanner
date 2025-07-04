@@ -21,7 +21,7 @@ class Collection {
 
   void addCard(Card card, {int amount = 1, int amountFoil = 0}) {
     final entryIndex = entries.indexWhere((entry) => entry.card.id == card.id);
-    
+
     if (entryIndex == -1) {
       entries.add(CollectionEntry(card: card, amount: amount, amountFoil: amountFoil));
     } else {
