@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lorescanner/provider/cards_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class CollectionScreen extends StatelessWidget {
   const CollectionScreen({super.key});
@@ -148,25 +149,38 @@ class CollectionScreen extends StatelessWidget {
                   leading: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: entry.card.images['thumbnail'] != null
-                        ? Image.network(
-                            entry.card.images['thumbnail']!,
+                        ? CachedNetworkImage(
+                            imageUrl: entry.card.images['thumbnail']!,
                             width: 60,
                             height: 80,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                width: 60,
-                                height: 80,
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.surfaceContainerHighest,
-                                  borderRadius: BorderRadius.circular(12),
+                            placeholder: (context, url) => Container(
+                              width: 60,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    theme.colorScheme.primary,
+                                  ),
                                 ),
-                                child: Icon(
-                                  Icons.image_not_supported,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              );
-                            },
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              width: 60,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.image_not_supported,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
                           )
                         : Container(
                             width: 60,
