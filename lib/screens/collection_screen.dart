@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lorescanner/provider/cards_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lorescanner/pages/card_detail_page.dart';
 
 class CollectionScreen extends StatelessWidget {
   const CollectionScreen({super.key});
@@ -196,8 +197,13 @@ class CollectionScreen extends StatelessWidget {
                           ),
                   ),
                   onTap: () {
-                    // Navigate to card detail page or perform any action
-                    // Navigator.push(context, MaterialPageRoute(builder: (context) => CardDetailPage(card: card)));
+                    // Navigate to card detail page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CardDetailPage(card: entry.card),
+                      ),
+                    );
                   },
                 ),
               );
