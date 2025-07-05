@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:lorescanner/models/card.dart' as lore;
+import 'package:cached_network_image/cached_network_image.dart';
 
 class FoundCardsOverview extends StatelessWidget {
   final List<lore.Card> foundCards;
@@ -138,12 +139,24 @@ class FoundCardsOverview extends StatelessWidget {
                   color: theme.colorScheme.surfaceContainerHighest,
                 ),
                 child: card.images['full'] != null
-                    ? Image.network(
-                        card.images['full']!,
+                    ? CachedNetworkImage(
+                        imageUrl: card.images['full']!,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return _buildErrorPlaceholder(context);
-                        },
+                        placeholder: (context, url) => Container(
+                          width: double.infinity,
+                          height: double.infinity,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerHighest,
+                          ),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                theme.colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => _buildErrorPlaceholder(context),
                       )
                     : _buildErrorPlaceholder(context),
               ),
