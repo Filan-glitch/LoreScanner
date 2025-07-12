@@ -32,6 +32,25 @@ class Collection {
       );
     }
   }
+
+  void removeCard(Card card, {int amount = 1, int amountFoil = 0}) {
+    final entryIndex = entries.indexWhere((entry) => entry.card.id == card.id);
+
+    if (entryIndex != -1) {
+      final entry = entries[entryIndex];
+      final newAmount = entry.amount - amount;
+      final newAmountFoil = entry.amountFoil - amountFoil;
+
+      if (newAmount <= 0 && newAmountFoil <= 0) {
+        entries.removeAt(entryIndex);
+      } else {
+        entries[entryIndex] = entry.copyWith(
+          amount: newAmount > 0 ? newAmount : 0,
+          amountFoil: newAmountFoil > 0 ? newAmountFoil : 0,
+        );
+      }
+    }
+  }
 }
 
 class CollectionEntry {

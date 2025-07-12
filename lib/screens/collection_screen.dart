@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:lorescanner/models/collection.dart';
 import 'package:lorescanner/provider/cards_provider.dart';
+import 'package:lorescanner/widgets/collection_item.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:lorescanner/pages/card_detail_page.dart';
 
 class CollectionScreen extends StatelessWidget {
   const CollectionScreen({super.key});
@@ -28,7 +28,7 @@ class CollectionScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBody(BuildContext context, CardsProvider cardsProvider, collection) {
+  Widget _buildBody(BuildContext context, CardsProvider cardsProvider, Collection collection) {
     final theme = Theme.of(context);
     
     if (cardsProvider.isLoadingCollection) {
@@ -115,101 +115,20 @@ class CollectionScreen extends StatelessWidget {
         
         // Collection list
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 0.7,
+            ),
             itemCount: collection.entries.length,
             itemBuilder: (context, index) {
-              final entry = collection.entries[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(16),
-                  title: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          entry.card.simpleName,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      _buildCardCountBadges(context, entry),
-                    ],
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      entry.card.setCode,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withAlpha(153),
-                      ),
-                    ),
-                  ),
-                  leading: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: entry.card.images['thumbnail'] != null
-                        ? CachedNetworkImage(
-                            imageUrl: entry.card.images['thumbnail']!,
-                            width: 60,
-                            height: 80,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => Container(
-                              width: 60,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    theme.colorScheme.primary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            errorWidget: (context, url, error) => Container(
-                              width: 60,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                Icons.image_not_supported,
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          )
-                        : Container(
-                            width: 60,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.image_not_supported,
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                  ),
-                  onTap: () {
-                    // Navigate to card detail page
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CardDetailPage(card: entry.card),
-                      ),
-                    );
-                  },
-                ),
-              );
+              final entry = collection.entries[index].card;
+              return CollectionItem(item: entry);
             },
-          ),
-        ),
+          )
+        )
       ],
     );
   }
@@ -239,48 +158,6 @@ class CollectionScreen extends StatelessWidget {
             color: theme.colorScheme.onPrimaryContainer.withAlpha(204),
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildCardCountBadges(BuildContext context, entry) {
-    final theme = Theme.of(context);
-    
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (entry.amount > 0)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              'x${entry.amount}',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        if (entry.amountFoil > 0) ...[
-          const SizedBox(width: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.tertiary,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              'Foil x${entry.amountFoil}',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onTertiary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
       ],
     );
   }

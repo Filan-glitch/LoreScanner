@@ -5,9 +5,16 @@ import 'package:lorescanner/models/price.dart';
 import 'package:lorescanner/provider/cards_provider.dart';
 import 'package:provider/provider.dart';
 
-class CardDetailPage extends StatelessWidget {
+class CardDetailPage extends StatefulWidget {
   final Card card;
+
   const CardDetailPage({super.key, required this.card});
+
+  @override
+  _CardDetailPageState createState() => _CardDetailPageState();
+}
+
+class _CardDetailPageState extends State<CardDetailPage> {
 
   @override
   Widget build(BuildContext context) {
@@ -30,12 +37,15 @@ class CardDetailPage extends StatelessWidget {
           children: [
             // Large card image at the top
             Semantics(
-              label: 'Kartenbild für ${card.fullName}',
+              label: 'Kartenbild für ${widget.card.fullName}',
               child: _buildCardImage(context),
             ),
             
             // Card name and basic info
             _buildCardHeader(context),
+
+            // Collection edit section
+            _buildCollectionEdit(context),
 
             // Card prices
             _buildCardPrices(context),
@@ -70,9 +80,9 @@ class CardDetailPage extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: card.images['full'] != null
+        child: widget.card.images['full'] != null
             ? CachedNetworkImage(
-                imageUrl: card.images['full']!,
+                imageUrl: widget.card.images['full']!,
                 fit: BoxFit.cover,
                 placeholder: (context, url) => Container(
                   color: theme.colorScheme.surfaceContainerHighest,
@@ -170,7 +180,7 @@ class CardDetailPage extends StatelessWidget {
         children: [
           // Card name
           Text(
-            card.fullName,
+            widget.card.fullName,
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurface,
@@ -315,7 +325,7 @@ class CardDetailPage extends StatelessWidget {
     final theme = Theme.of(context);
 
     final cardsProvider = Provider.of<CardsProvider>(context);
-    final cardmarketId = int.tryParse(card.externalLinks['cardmarketId'] ?? '');
+    final cardmarketId = int.tryParse(widget.card.externalLinks['cardmarketId'] ?? '');
 
     return Container(
       margin: const EdgeInsets.all(16),
@@ -326,7 +336,7 @@ class CardDetailPage extends StatelessWidget {
           color: theme.colorScheme.outline.withAlpha(51),
         ),
       ),
-      child:Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Section header
@@ -358,22 +368,115 @@ class CardDetailPage extends StatelessWidget {
     );
   }
 
+  Widget _buildCollectionEdit(BuildContext context) {
+    final theme = Theme.of(context);
+
+    final cardsProvider = Provider.of<CardsProvider>(context);
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withAlpha(51),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Normal Container
+          // Minus Button + Card Count in Collection + Plus Button
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Minus Button
+                  IconButton(
+                    icon: Icon(Icons.remove_circle_outline, color: theme.colorScheme.primary),
+                    onPressed: () {
+                      cardsProvider.removeCardFromCollection(widget.card, amount: 1);
+                      setState(() {});
+                    }
+                  ),
+                  // Card Count in Collection
+                  Text(
+                    '${cardsProvider.collection.getEntryByCard(widget.card)?.amount ?? 0}',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  // Plus Button
+                  IconButton(
+                    icon: Icon(Icons.add_circle_outline, color: theme.colorScheme.primary),
+                    onPressed: () {
+                      cardsProvider.addCardToCollection(widget.card, amount: 1);
+                      setState(() {});
+                    }
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Foil Container
+          // Minus Button + Card Count in Collection + Plus Button
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Minus Button
+                  IconButton(
+                      icon: Icon(Icons.remove_circle_outline, color: theme.colorScheme.primary),
+                      onPressed: () {
+                        cardsProvider.removeCardFromCollection(widget.card, amountFoil: 1);
+                        setState(() {});
+                      }
+                  ),
+                  // Card Count in Collection
+                  Text(
+                    '${cardsProvider.collection.getEntryByCard(widget.card)?.amountFoil ?? 0}',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  // Plus Button
+                  IconButton(
+                      icon: Icon(Icons.add_circle_outline, color: theme.colorScheme.primary),
+                      onPressed: () {
+                        cardsProvider.addCardToCollection(widget.card, amountFoil: 1);
+                        setState(() {});
+                      }
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      )
+    );
+  }
+
   Map<String, dynamic> _getCardAttributes() {
     final attributes = <String, dynamic>{};
     
     // Add current card attributes (always available)
-    attributes['ID'] = card.id;
-    attributes['Sprache'] = _getLanguageLabel(card.language);
-    attributes['Typ'] = card.type;
-    attributes['Kosten'] = card.cost;
-    attributes['Seltenheit'] = card.rarity;
-    attributes['Geschichte'] = card.story;
-    attributes['Tintenfass'] = card.inkwell ? 'Ja' : 'Nein';
-    attributes['Künstler'] = card.artistsText;
+    attributes['ID'] = widget.card.id;
+    attributes['Sprache'] = _getLanguageLabel(widget.card.language);
+    attributes['Typ'] = widget.card.type;
+    attributes['Kosten'] = widget.card.cost;
+    attributes['Seltenheit'] = widget.card.rarity;
+    attributes['Geschichte'] = widget.card.story;
+    attributes['Tintenfass'] = widget.card.inkwell ? 'Ja' : 'Nein';
+    attributes['Künstler'] = widget.card.artistsText;
 
     // Add image information
-    if (card.images.isNotEmpty) {
-      final imageTypes = card.images.keys.map((key) => _getImageTypeLabel(key)).join(', ');
+    if (widget.card.images.isNotEmpty) {
+      final imageTypes = widget.card.images.keys.map((key) => _getImageTypeLabel(key)).join(', ');
       attributes['Verfügbare Bilder'] = imageTypes;
     }
 

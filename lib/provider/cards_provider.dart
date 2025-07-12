@@ -59,6 +59,19 @@ class CardsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> removeCardFromCollection(Card card, {int amount = 1, int amountFoil = 0}) async {
+    _collection.removeCard(card, amount: amount, amountFoil: amountFoil);
+
+    // Also persist to database
+    try {
+      await db.removeCardFromCollection(card.id, amount: amount, amountFoil: amountFoil);
+    } catch (e) {
+      print('Error persisting card removal to database: $e');
+    }
+
+    notifyListeners();
+  }
+
   void setCards(List<Card> newCards) {
     _cards = newCards;
     notifyListeners();
