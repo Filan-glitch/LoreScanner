@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart' hide Card;
 import 'package:lorescanner/models/card.dart';
 import 'package:lorescanner/models/collection.dart';
+import 'package:lorescanner/models/price.dart';
 import 'package:lorescanner/service/database.dart' as db;
 
 class CardsProvider extends ChangeNotifier {
   List<Card> _cards = [];
   Collection _collection = Collection(entries: []);
+  List<Price> _prices = [];
   bool _isLoadingCollection = false;
 
   List<Card> get cards => _cards;
   Collection get collection => _collection;
+  List<Price> get prices => _prices;
   bool get isLoadingCollection => _isLoadingCollection;
 
   Future<void> loadCollection() async {
@@ -63,6 +66,11 @@ class CardsProvider extends ChangeNotifier {
 
   void setCollection(Collection newCollection) {
     _collection = newCollection;
+    notifyListeners();
+  }
+
+  void setPrices(List<Price> newPrices) {
+    _prices = newPrices;
     notifyListeners();
   }
 

@@ -11,9 +11,21 @@ class Card with CardMappable {
   final String setCode;
   final String simpleName;
   final String language;
+  final String artistsText;
+  final String fullName;
+  final String rarity;
+  final String story;
+  final String type;
+  final int cost;
+
+  @MappableField(hook: InkwellHook())
+  final bool inkwell;
 
   @MappableField(hook: ImagesHook())
   final Map<String, String> images;
+
+  @MappableField(hook: ExternalLinksHook())
+  final Map<String, String> externalLinks;
 
   // Optional fields
   /*
@@ -66,6 +78,14 @@ class Card with CardMappable {
     required this.setCode,
     required this.images,
     required this.simpleName,
+    required this.artistsText,
+    required this.fullName,
+    required this.rarity,
+    required this.story,
+    required this.type,
+    required this.inkwell,
+    required this.cost,
+    required this.externalLinks,
     this.language = 'de'
   });
 
@@ -97,8 +117,50 @@ class Ability {
   });
 }
 
+class InkwellHook extends MappingHook {
+  const InkwellHook();
+
+  @override
+  Object? beforeEncode(Object? value) {
+    if (value is bool) {
+      return value ? 1 : 0;
+    }
+    return value;
+  }
+
+  @override
+  Object? beforeDecode(Object? value) {
+    if (value is int) {
+      return value == 1;
+    }
+    return value;
+  }
+}
+
 class ImagesHook extends MappingHook {
   const ImagesHook();
+
+  @override
+  Object? beforeEncode(Object? value) {
+    if (value is Map<String, String>) {
+      // Convert the map to a JSON string
+      return jsonEncode(value);
+    }
+    return value;
+  }
+
+  @override
+  Object? beforeDecode(Object? value) {
+    if (value is String) {
+      // Convert the JSON string back to a map
+      return jsonDecode(value) as Map<String, dynamic>;
+    }
+    return value;
+  }
+}
+
+class ExternalLinksHook extends MappingHook {
+  const ExternalLinksHook();
 
   @override
   Object? beforeEncode(Object? value) {

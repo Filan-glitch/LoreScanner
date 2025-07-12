@@ -17,6 +17,14 @@ Future<Database> openDB() async {
           images TEXT,
           setCode TEXT,
           simpleName TEXT,
+          artistsText TEXT,
+          fullName TEXT,
+          rarity TEXT,
+          story TEXT,
+          type TEXT,
+          inkwell INTEGER,
+          cost INTEGER,
+          externalLinks TEXT,
           language TEXT DEFAULT 'de'
         );
       ''');

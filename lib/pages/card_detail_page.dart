@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart' hide Card;
 import 'package:lorescanner/models/card.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lorescanner/models/price.dart';
+import 'package:lorescanner/provider/cards_provider.dart';
+import 'package:provider/provider.dart';
 
 class CardDetailPage extends StatelessWidget {
   final Card card;
@@ -10,7 +13,7 @@ class CardDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(card.simpleName),
+        title: const Text('Detailansicht'),
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
@@ -27,13 +30,16 @@ class CardDetailPage extends StatelessWidget {
           children: [
             // Large card image at the top
             Semantics(
-              label: 'Kartenbild für ${card.simpleName}',
+              label: 'Kartenbild für ${card.fullName}',
               child: _buildCardImage(context),
             ),
             
             // Card name and basic info
             _buildCardHeader(context),
-            
+
+            // Card prices
+            _buildCardPrices(context),
+
             // Card attributes section
             _buildCardAttributes(context),
             
@@ -164,27 +170,10 @@ class CardDetailPage extends StatelessWidget {
         children: [
           // Card name
           Text(
-            card.simpleName,
+            card.fullName,
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 8),
-          
-          // Set code
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              card.setCode,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer,
-                fontWeight: FontWeight.w600,
-              ),
             ),
           ),
           const SizedBox(height: 24),
@@ -322,31 +311,84 @@ class CardDetailPage extends StatelessWidget {
     );
   }
 
+  Widget _buildCardPrices(BuildContext context) {
+    final theme = Theme.of(context);
+
+    final cardsProvider = Provider.of<CardsProvider>(context);
+    final cardmarketId = int.tryParse(card.externalLinks['cardmarketId'] ?? '');
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withAlpha(51),
+        ),
+      ),
+      child:Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section header
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.attach_money,
+                  color: theme.colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Cardmarket Preise',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Attributes list
+          ...cardsProvider.prices.firstWhere((price) => price.idProduct == cardmarketId).attributes.map((entry) => _buildAttributeItem(context, entry.key, entry.value)),
+        ],
+      ),
+    );
+  }
+
   Map<String, dynamic> _getCardAttributes() {
     final attributes = <String, dynamic>{};
     
     // Add current card attributes (always available)
     attributes['ID'] = card.id;
     attributes['Sprache'] = _getLanguageLabel(card.language);
-    
+    attributes['Typ'] = card.type;
+    attributes['Kosten'] = card.cost;
+    attributes['Seltenheit'] = card.rarity;
+    attributes['Geschichte'] = card.story;
+    attributes['Tintenfass'] = card.inkwell ? 'Ja' : 'Nein';
+    attributes['Künstler'] = card.artistsText;
+
     // Add image information
     if (card.images.isNotEmpty) {
       final imageTypes = card.images.keys.map((key) => _getImageTypeLabel(key)).join(', ');
       attributes['Verfügbare Bilder'] = imageTypes;
     }
+
+
     
     // TODO: When optional fields are uncommented in the Card model,
     // add them here using reflection or manual mapping.
     // This makes the detail page automatically adapt to new fields.
     // Example implementation for future use:
     /*
-    if (card.name != null) attributes['Vollständiger Name'] = card.name;
-    if (card.type != null) attributes['Typ'] = card.type;
-    if (card.cost != null) attributes['Kosten'] = card.cost;
+
     if (card.strength != null) attributes['Stärke'] = card.strength;
     if (card.willpower != null) attributes['Willenskraft'] = card.willpower;
     if (card.lore != null) attributes['Wissen'] = card.lore;
-    if (card.rarity != null) attributes['Seltenheit'] = card.rarity;
+
     if (card.color != null) attributes['Farbe'] = card.color;
     if (card.colors != null && card.colors!.isNotEmpty) {
       attributes['Farben'] = card.colors!.join(', ');
@@ -359,23 +401,21 @@ class CardDetailPage extends StatelessWidget {
     }
     if (card.flavorText != null) attributes['Geschmackstext'] = card.flavorText;
     if (card.fullText != null) attributes['Volltext'] = card.fullText;
-    if (card.artists != null && card.artists!.isNotEmpty) {
-      attributes['Künstler'] = card.artists!.join(', ');
-    }
-    if (card.story != null) attributes['Geschichte'] = card.story;
+
+
     if (card.variant != null) attributes['Variante'] = card.variant;
     if (card.version != null) attributes['Version'] = card.version;
     if (card.number != null) attributes['Nummer'] = card.number;
     if (card.maxCopiesInDeck != null) attributes['Max. Kopien im Deck'] = card.maxCopiesInDeck;
     if (card.bannedSince != null) attributes['Verboten seit'] = card.bannedSince;
     if (card.moveCost != null) attributes['Bewegungskosten'] = card.moveCost;
-    if (card.inkwell != null) attributes['Tintenfass'] = card.inkwell! ? 'Ja' : 'Nein';
+
     if (card.isExternalReveal != null) attributes['Externe Enthüllung'] = card.isExternalReveal! ? 'Ja' : 'Nein';
     */
     
     return attributes;
   }
-  
+
   String _getLanguageLabel(String language) {
     switch (language.toLowerCase()) {
       case 'de':
@@ -424,9 +464,6 @@ class CardDetailPage extends StatelessWidget {
     return value.toString();
   }
 
-  /// Helper method to determine if a card attribute should be displayed
-  /// This can be used to filter out attributes based on user preferences
-  /// or card type in future implementations
   bool _shouldShowAttribute(String key, dynamic value) {
     // Hide null or empty values
     if (value == null) return false;
@@ -435,10 +472,12 @@ class CardDetailPage extends StatelessWidget {
     if (value is Map && value.isEmpty) return false;
     
     // Always show basic attributes
-    if (['ID', 'Sprache', 'Verfügbare Bilder'].contains(key)) return true;
+    if (['Sprache', 'Typ', 'Kosten', 'Seltenheit', 'Geschichte', 'Tintenfass', 'Künstler'].contains(key)) return true;
     
     // In future, this could be expanded to handle user preferences
     // or card-type-specific attribute filtering
-    return true;
+    return false;
   }
+
+
 }

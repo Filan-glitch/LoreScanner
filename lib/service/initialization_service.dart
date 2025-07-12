@@ -1,8 +1,11 @@
 import 'package:camera/camera.dart';
 import 'package:lorescanner/models/card.dart';
 import 'package:lorescanner/models/collection.dart';
+import 'package:lorescanner/models/price.dart';
 import 'package:lorescanner/service/database.dart';
 import 'package:lorescanner/provider/cards_provider.dart';
+
+import 'api.dart';
 
 /// Service responsible for centralizing all app initialization logic
 class InitializationService {
@@ -13,11 +16,13 @@ class InitializationService {
   List<CameraDescription>? _cameras;
   List<Card>? _cards;
   Collection? _collection;
+  List<Price>? _prices;
   bool _isInitialized = false;
 
   List<CameraDescription>? get cameras => _cameras;
   List<Card>? get cards => _cards;
   Collection? get collection => _collection;
+  List<Price>? get prices => _prices;
   bool get isInitialized => _isInitialized;
 
   /// Initialize all app dependencies and services
@@ -33,6 +38,9 @@ class InitializationService {
       
       // Initialize collection data
       await _initializeCollection();
+
+      // Initialize prices
+      await initializePrices();
       
       _isInitialized = true;
     } catch (e) {
@@ -90,6 +98,16 @@ class InitializationService {
     }
   }
 
+  /// Initialize prices
+  Future<void> initializePrices() async {
+    try {
+      _prices = await fetchPrices();
+    } catch (e) {
+      print('Error initializing prices: $e');
+      rethrow;
+    }
+  }
+
   /// Initialize the CardsProvider with fetched cards and collection
   void initializeCardsProvider(CardsProvider provider) {
     if (_cards != null) {
@@ -98,6 +116,9 @@ class InitializationService {
     if (_collection != null) {
       provider.setCollection(_collection!);
     }
+    if (_prices != null) {
+      provider.setPrices(_prices!);
+    }
   }
 
   /// Reset initialization state (useful for testing)
@@ -105,6 +126,7 @@ class InitializationService {
     _cameras = null;
     _cards = null;
     _collection = null;
+    _prices = null;
     _isInitialized = false;
   }
 }
