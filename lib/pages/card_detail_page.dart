@@ -441,7 +441,8 @@ class _CardDetailPageState extends State<CardDetailPage> {
                     '${cardsProvider.collection.getEntryByCard(widget.card)?.amountFoil ?? 0}',
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSurface,
+                      color: theme.colorScheme.secondary, // Use a special color for foil
+                      backgroundColor: theme.colorScheme.secondaryContainer, // Optional: add background for more distinction
                     ),
                   ),
                   // Plus Button
