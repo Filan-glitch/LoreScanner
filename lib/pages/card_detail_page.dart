@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart' hide Card;
 import 'package:lorescanner/models/card.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:lorescanner/models/price.dart';
 import 'package:lorescanner/provider/cards_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -83,7 +82,7 @@ class _CardDetailPageState extends State<CardDetailPage> {
         child: widget.card.images['full'] != null
             ? CachedNetworkImage(
                 imageUrl: widget.card.images['full']!,
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
                 placeholder: (context, url) => Container(
                   color: theme.colorScheme.surfaceContainerHighest,
                   child: Center(
@@ -437,14 +436,23 @@ class _CardDetailPageState extends State<CardDetailPage> {
                       }
                   ),
                   // Card Count in Collection
-                  Text(
-                    '${cardsProvider.collection.getEntryByCard(widget.card)?.amountFoil ?? 0}',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.secondary, // Use a special color for foil
-                      backgroundColor: theme.colorScheme.secondaryContainer, // Optional: add background for more distinction
+                  Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.secondaryContainer,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '${cardsProvider.collection.getEntryByCard(widget.card)?.amountFoil ?? 0}',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.secondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                  ),
                   // Plus Button
                   IconButton(
                       icon: Icon(Icons.add_circle_outline, color: theme.colorScheme.primary),
@@ -464,24 +472,15 @@ class _CardDetailPageState extends State<CardDetailPage> {
 
   Map<String, dynamic> _getCardAttributes() {
     final attributes = <String, dynamic>{};
-    
+
     // Add current card attributes (always available)
-    attributes['ID'] = widget.card.id;
-    attributes['Sprache'] = _getLanguageLabel(widget.card.language);
-    attributes['Typ'] = widget.card.type;
-    attributes['Kosten'] = widget.card.cost;
-    attributes['Seltenheit'] = widget.card.rarity;
     attributes['Geschichte'] = widget.card.story;
-    attributes['Tintenfass'] = widget.card.inkwell ? 'Ja' : 'Nein';
-    attributes['Künstler'] = widget.card.artistsText;
 
     // Add image information
     if (widget.card.images.isNotEmpty) {
       final imageTypes = widget.card.images.keys.map((key) => _getImageTypeLabel(key)).join(', ');
       attributes['Verfügbare Bilder'] = imageTypes;
     }
-
-
     
     // TODO: When optional fields are uncommented in the Card model,
     // add them here using reflection or manual mapping.
@@ -518,23 +517,6 @@ class _CardDetailPageState extends State<CardDetailPage> {
     */
     
     return attributes;
-  }
-
-  String _getLanguageLabel(String language) {
-    switch (language.toLowerCase()) {
-      case 'de':
-        return 'Deutsch';
-      case 'en':
-        return 'English';
-      case 'fr':
-        return 'Français';
-      case 'it':
-        return 'Italiano';
-      case 'es':
-        return 'Español';
-      default:
-        return language.toUpperCase();
-    }
   }
   
   String _getImageTypeLabel(String imageType) {
@@ -576,12 +558,10 @@ class _CardDetailPageState extends State<CardDetailPage> {
     if (value is Map && value.isEmpty) return false;
     
     // Always show basic attributes
-    if (['Sprache', 'Typ', 'Kosten', 'Seltenheit', 'Geschichte', 'Tintenfass', 'Künstler'].contains(key)) return true;
+    if (['Geschichte'].contains(key)) return true;
     
     // In future, this could be expanded to handle user preferences
     // or card-type-specific attribute filtering
     return false;
   }
-
-
 }

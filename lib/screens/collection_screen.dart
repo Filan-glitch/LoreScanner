@@ -4,6 +4,8 @@ import 'package:lorescanner/provider/cards_provider.dart';
 import 'package:lorescanner/widgets/collection_item.dart';
 import 'package:provider/provider.dart';
 
+import '../dialogs/collection_filter_dialog.dart';
+
 class CollectionScreen extends StatelessWidget {
   const CollectionScreen({super.key});
 
@@ -23,6 +25,17 @@ class CollectionScreen extends StatelessWidget {
             },
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Filter
+          showDialog(
+            context: context,
+            builder: (context) => const CollectionFilterDialog(),
+          );
+        },
+        child: const Icon(Icons.filter_alt),
+        tooltip: 'Sammlung filtern',
       ),
       body: _buildBody(context, cardsProvider, collection),
     );

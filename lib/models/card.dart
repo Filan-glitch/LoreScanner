@@ -11,7 +11,6 @@ class Card with CardMappable {
   final String setCode;
   final String simpleName;
   final String language;
-  final String artistsText;
   final String fullName;
   final String rarity;
   final String story;
@@ -78,7 +77,6 @@ class Card with CardMappable {
     required this.setCode,
     required this.images,
     required this.simpleName,
-    required this.artistsText,
     required this.fullName,
     required this.rarity,
     required this.story,
