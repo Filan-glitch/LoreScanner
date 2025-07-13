@@ -1,18 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:lorescanner/provider/tab_notifier.dart';
 import 'package:lorescanner/screens/collection_screen.dart';
 import 'package:lorescanner/screens/scanner_screen.dart';
 import 'package:lorescanner/screens/settings_screen.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final TabNotifier _tabNotifier = TabNotifier(0);
 
   @override
   Widget build(BuildContext context) {
     return PersistentTabView(
+      onTabChanged: (index) {
+        _tabNotifier.value = index;
+      },
       tabs: [
         PersistentTabConfig(
-          screen: const ScannerScreen(),
+          screen: ScannerScreen(tabNotifier: _tabNotifier),
           item: ItemConfig(
             icon: const Icon(Icons.camera_alt),
             title: 'Scanner',

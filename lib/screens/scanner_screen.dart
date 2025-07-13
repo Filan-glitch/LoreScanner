@@ -3,6 +3,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Card;
 import 'package:lorescanner/models/card.dart';
+import 'package:lorescanner/provider/tab_notifier.dart';
 import 'package:lorescanner/widgets/found_cards_overview.dart';
 import 'package:lorescanner/widgets/card_template_overlay.dart';
 import 'package:lorescanner/service/initialization_service.dart';
@@ -12,7 +13,8 @@ import 'package:lorescanner/provider/cards_provider.dart';
 import '../service/cards_analysis.dart';
 
 class ScannerScreen extends StatefulWidget {
-  const ScannerScreen({super.key});
+  final TabNotifier tabNotifier;
+  const ScannerScreen({super.key, required this.tabNotifier});
 
   @override
   State<ScannerScreen> createState() => _ScannerScreenState();
@@ -23,7 +25,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
   bool _isInitialized = false;
   bool loading = false;
   final InitializationService _initService = InitializationService();
-  
+
   // Performance tracking
   final List<String> _performanceLogs = [];
 
@@ -31,14 +33,35 @@ class _ScannerScreenState extends State<ScannerScreen> {
   void initState() {
     super.initState();
     _initializeCameraController();
+    widget.tabNotifier.addListener(_handleTabChange);
   }
 
   @override
   void dispose() {
+    widget.tabNotifier.removeListener(_handleTabChange);
     if (_isInitialized) {
       _cameraController.dispose();
     }
     super.dispose();
+  }
+
+  void _handleTabChange() {
+    if (widget.tabNotifier.value == 0) {
+      _initializeCameraController();
+    } else {
+      _disposeCameraController();
+    }
+  }
+
+  Future<void> _disposeCameraController() async {
+    if (_isInitialized) {
+      await _cameraController.dispose();
+      if (mounted) {
+        setState(() {
+          _isInitialized = false;
+        });
+      }
+    }
   }
 
   Future<void> _initializeCameraController() async {
