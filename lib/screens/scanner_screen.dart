@@ -20,9 +20,8 @@ class ScannerScreen extends StatefulWidget {
   State<ScannerScreen> createState() => _ScannerScreenState();
 }
 
-class _ScannerScreenState extends State<ScannerScreen> {
-  late CameraController _cameraController;
-  bool _isInitialized = false;
+class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserver {
+  CameraController? _cameraController;
   bool loading = false;
   final InitializationService _initService = InitializationService();
 
@@ -30,18 +29,35 @@ class _ScannerScreenState extends State<ScannerScreen> {
   final List<String> _performanceLogs = [];
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final CameraController? cameraController = _cameraController;
+
+    // App state changed before we got the chance to initialize.
+    if (cameraController == null || !cameraController.value.isInitialized) {
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive) {
+      cameraController.dispose();
+    } else if (state == AppLifecycleState.resumed) {
+      _initializeCameraController();
+    }
+  }
+
+  @override
   void initState() {
     super.initState();
-    _initializeCameraController();
+    WidgetsBinding.instance.addObserver(this);
+    if(_cameraController == null || !_cameraController!.value.isInitialized) {
+      _initializeCameraController();
+    }
     widget.tabNotifier.addListener(_handleTabChange);
   }
 
   @override
   void dispose() {
     widget.tabNotifier.removeListener(_handleTabChange);
-    if (_isInitialized) {
-      _cameraController.dispose();
-    }
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -49,17 +65,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
     if (widget.tabNotifier.value == 0) {
       _initializeCameraController();
     } else {
-      _disposeCameraController();
-    }
-  }
-
-  Future<void> _disposeCameraController() async {
-    if (_isInitialized) {
-      await _cameraController.dispose();
-      if (mounted) {
-        setState(() {
-          _isInitialized = false;
-        });
+      // Dispose camera controller when leaving the scanner tab
+      if (_cameraController != null && _cameraController!.value.isInitialized) {
+        _cameraController!.dispose();
       }
     }
   }
@@ -78,13 +86,17 @@ class _ScannerScreenState extends State<ScannerScreen> {
       ResolutionPreset.medium, // Changed from max to medium for better performance
     );
 
-    try {
-      await _cameraController.initialize();
+    _cameraController?.addListener(() {
       if (mounted) {
-        setState(() {
-          _isInitialized = true;
-        });
+        setState(() {});
       }
+      if (_cameraController!.value.hasError) {
+        print('Camera error: ${_cameraController!.value.errorDescription}');
+      }
+    });
+
+    try {
+      await _cameraController!.initialize();
     } catch (e) {
       print('Error initializing camera controller: $e');
       if (e is CameraException) {
@@ -101,12 +113,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
   }
 
   Future<XFile?> _takePicture() async {
-    if (!_cameraController.value.isInitialized) {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
       print('Error: Camera is not initialized');
       return null;
     }
     try {
-      final image = await _cameraController.takePicture();
+      final image = await _cameraController!.takePicture();
       print('Picture taken: ${image.path}');
       return image;
     } catch (e) {
@@ -158,7 +170,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
     final cardsProvider = context.watch<CardsProvider>();
     
     // Check if everything is properly initialized
-    if (!_isInitialized || cardsProvider.cards.isEmpty) {
+    if (_cameraController == null || !_cameraController!.value.isInitialized || cardsProvider.cards.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
     
@@ -284,12 +296,30 @@ class _ScannerScreenState extends State<ScannerScreen> {
         : Stack(
             children: [
               // Camera preview
-              CameraPreview(_cameraController),
-              
-              // Card template overlay
-              const CardTemplateOverlay(),
+              _cameraPreviewWidget(),
             ],
           ),
     );
+  }
+
+  Widget _cameraPreviewWidget() {
+    final CameraController? cameraController = _cameraController;
+
+    if (_cameraController == null || !cameraController!.value.isInitialized) {
+      return const Text(
+        'Kamera nicht verfügbar',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 24.0,
+          fontWeight: FontWeight.w900,
+        ),
+      );
+    } else {
+      return CameraPreview(
+        cameraController,
+        // Card template overlay
+        child: const CardTemplateOverlay(),
+      );
+    }
   }
 }
