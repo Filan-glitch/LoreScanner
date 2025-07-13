@@ -29,6 +29,7 @@ class _HomePageState extends State<HomePage> {
           item: ItemConfig(
             icon: const Icon(Icons.camera_alt),
             title: 'Scanner',
+            activeColorSecondary: theme.colorScheme.secondary
           ),
         ),
         PersistentTabConfig(
@@ -49,12 +50,8 @@ class _HomePageState extends State<HomePage> {
       navBarBuilder: (navBarConfig) => Style1BottomNavBar(
         navBarConfig: navBarConfig,
         navBarDecoration: NavBarDecoration(
-          color: theme.colorScheme.surface,
-          border: BoxBorder.fromLTRB(top: BorderSide(
-            color: theme.colorScheme.primary,
-            width: 2.0,
-          )),
-          borderRadius: const BorderRadius.only(topLeft: Radius.circular(16.0), topRight: Radius.circular(16.0)),
+          color: theme.colorScheme.primaryContainer,
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
         ),
       ),
     );

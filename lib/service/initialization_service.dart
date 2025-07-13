@@ -4,6 +4,7 @@ import 'package:lorescanner/models/collection.dart';
 import 'package:lorescanner/models/price.dart';
 import 'package:lorescanner/service/database.dart';
 import 'package:lorescanner/provider/cards_provider.dart';
+import 'package:lorescanner/service/logging.dart';
 
 import 'api.dart';
 
@@ -43,8 +44,8 @@ class InitializationService {
       await initializePrices();
       
       _isInitialized = true;
-    } catch (e) {
-      print('Error during initialization: $e');
+    } catch (e, st) {
+      log.severe('Error during initialization', e, st);
       rethrow;
     }
   }
@@ -56,8 +57,8 @@ class InitializationService {
       if (_cameras?.isEmpty ?? true) {
         throw Exception('No cameras found');
       }
-    } catch (e) {
-      print('Error initializing cameras: $e');
+    } catch (e, st) {
+      log.severe('Error initializing cameras', e, st);
       rethrow;
     }
   }
@@ -66,8 +67,8 @@ class InitializationService {
   Future<void> _initializeDatabase() async {
     try {
       _cards = await fetchCardsFromDB();
-    } catch (e) {
-      print('Error initializing database: $e');
+    } catch (e, st) {
+      log.severe('Error initializing database', e, st);
       rethrow;
     }
   }
@@ -92,8 +93,8 @@ class InitializationService {
       }
       
       _collection = Collection(entries: entries);
-    } catch (e) {
-      print('Error initializing collection: $e');
+    } catch (e, st) {
+      log.severe('Error initializing collection', e, st);
       rethrow;
     }
   }
@@ -102,8 +103,8 @@ class InitializationService {
   Future<void> initializePrices() async {
     try {
       _prices = await fetchPrices();
-    } catch (e) {
-      print('Error initializing prices: $e');
+    } catch (e, st) {
+      log.severe('Error initializing prices', e, st);
       rethrow;
     }
   }
