@@ -1,4 +1,6 @@
 
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:lorescanner/models/card.dart' as lore;
 import 'package:cached_network_image/cached_network_image.dart';
@@ -12,25 +14,24 @@ class FoundCardsOverview extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Wähle die korrekte Karte aus'),
-        centerTitle: true,
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              theme.colorScheme.surface,
-              theme.colorScheme.surfaceContainerLow,
-            ],
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(16),
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface.withOpacity(0.8),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: theme.colorScheme.onSurface.withOpacity(0.1),
+              width: 1,
+            ),
           ),
+          child: foundCards.isEmpty
+              ? _buildEmptyState(context)
+              : _buildCardGrid(context),
         ),
-        child: foundCards.isEmpty
-            ? _buildEmptyState(context)
-            : _buildCardGrid(context),
       ),
     );
   }
@@ -78,27 +79,29 @@ class FoundCardsOverview extends StatelessWidget {
     final theme = Theme.of(context);
     
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          padding: const EdgeInsets.all(16),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
           child: Text(
-            '${foundCards.length} Karte${foundCards.length > 1 ? 'n' : ''} gefunden',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
+            'Wähle die korrekte Karte aus',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurface,
             ),
           ),
         ),
-        Expanded(
+        Flexible(
           child: GridView.builder(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               childAspectRatio: 0.7,
-              crossAxisSpacing: 12.0,
-              mainAxisSpacing: 12.0,
+              crossAxisSpacing: 16.0,
+              mainAxisSpacing: 16.0,
             ),
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(24.0),
             itemCount: foundCards.length,
+            shrinkWrap: true,
             itemBuilder: (context, index) {
               final cardMatch = foundCards[index];
               return _buildCardItem(context, cardMatch.card);
@@ -183,16 +186,6 @@ class FoundCardsOverview extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        card.simpleName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
                       const SizedBox(height: 4),
                       Text(
                         card.setCode,

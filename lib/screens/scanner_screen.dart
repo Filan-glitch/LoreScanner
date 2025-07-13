@@ -250,11 +250,9 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
               print('Found cards: ${result.foundCards.length}');
               
               if (result.foundCards.isNotEmpty) {
-                final Map<String, dynamic>? map = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => FoundCardsOverview(foundCards: result.foundCards),
-                  ),
+                final Map<String, dynamic>? map = await showDialog(
+                  context: context,
+                  builder: (context) => FoundCardsOverview(foundCards: result.foundCards),
                 );
                 
                 if (map != null) {
@@ -268,7 +266,6 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
                     amountFoil: foil ? 1 : 0,
                   );
                 }
-              } else {
               }
             }
           } catch (error) {

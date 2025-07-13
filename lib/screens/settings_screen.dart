@@ -23,116 +23,119 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final theme = Theme.of(context);
     final themeProvider = context.watch<ThemeProvider>();
     
-    return SizedBox(
-      width: double.infinity,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Header section with app icon and developer info
-            Container(
-              padding: const EdgeInsets.all(32.0),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withAlpha(26),
-                      borderRadius: BorderRadius.circular(20),
+    return Scaffold(
+      body: SizedBox(
+        width: double.infinity,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Header section with app icon and developer info
+              Container(
+                margin: const EdgeInsets.only(top: 32),
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withAlpha(26),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Image.asset(
+                        'assets/images/icon.png',
+                        height: 80,
+                        width: 80,
+                      ),
                     ),
-                    child: Image.asset(
-                      'assets/images/icon.png',
-                      height: 80,
-                      width: 80,
+                    const SizedBox(height: 20),
+                    Text(
+                      'Lore Scanner',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Finn Dilan',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withAlpha(179),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Settings sections
+              _buildSettingsSection(
+                context,
+                'Darstellung',
+                [
+                  _buildThemeListTile(context, themeProvider),
+                ],
+              ),
+
+              _buildSettingsSection(
+                context,
+                'Sprache',
+                [
+                  _buildLanguageListTile(context),
+                ],
+              ),
+
+              _buildSettingsSection(
+                context,
+                'Informationen',
+                [
+                  _buildInfoListTile(
+                    context,
+                    Icons.install_mobile,
+                    'Offizielle Disney Lorcana App',
+                        () => _launchUrl(OFFICIAL_APP_URL),
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Lore Scanner',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary,
-                    ),
+                  _buildInfoListTile(
+                    context,
+                    Icons.web,
+                    'Offizielle Disney Lorcana Website',
+                        () => _launchUrl(OFFICIAL_WEBSITE_URL),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Finn Dilan',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withAlpha(179),
-                    ),
+                  _buildInfoListTile(
+                    context,
+                    Icons.account_balance,
+                    'Lizenzen',
+                        () => showLicensePage(context: context),
                   ),
                 ],
               ),
-            ),
-            
-            // Settings sections
-            _buildSettingsSection(
-              context,
-              'Darstellung',
-              [
-                _buildThemeListTile(context, themeProvider),
-              ],
-            ),
-            
-            _buildSettingsSection(
-              context,
-              'Sprache',
-              [
-                _buildLanguageListTile(context),
-              ],
-            ),
-            
-            _buildSettingsSection(
-              context,
-              'Informationen',
-              [
-                _buildInfoListTile(
-                  context,
-                  Icons.install_mobile,
-                  'Offizielle Disney Lorcana App',
-                  () => _launchUrl(OFFICIAL_APP_URL),
-                ),
-                _buildInfoListTile(
-                  context,
-                  Icons.web,
-                  'Offizielle Disney Lorcana Website',
-                  () => _launchUrl(OFFICIAL_WEBSITE_URL),
-                ),
-                _buildInfoListTile(
-                  context,
-                  Icons.account_balance,
-                  'Lizenzen',
-                  () => showLicensePage(context: context),
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Logout button
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => Navigator.pop(context),
-                icon: Icon(
-                  Icons.logout,
-                  color: theme.colorScheme.error,
-                ),
-                label: Text(
-                  'Abmelden',
-                  style: TextStyle(color: theme.colorScheme.error),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.errorContainer,
-                  foregroundColor: theme.colorScheme.onErrorContainer,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+
+              const SizedBox(height: 20),
+
+              // Logout button
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(
+                    Icons.logout,
+                    color: theme.colorScheme.error,
+                  ),
+                  label: Text(
+                    'Abmelden',
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.errorContainer,
+                    foregroundColor: theme.colorScheme.onErrorContainer,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
                 ),
               ),
-            ),
-            
-            const SizedBox(height: 32),
-          ],
+
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );
