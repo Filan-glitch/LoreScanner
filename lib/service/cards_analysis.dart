@@ -161,7 +161,7 @@ List<CardMatch> _findMatchingCards(String text, List<Card> cards) {
       .toSet(); // Use a Set to avoid duplicate names
 
   final foundCards = <CardMatch>[];
-  final matchedCardIds = <String>{}; // Track matched card IDs to avoid duplicates
+  final matchedCardIds = <int>{}; // Track matched card IDs to avoid duplicates
 
   for (final potentialName in potentialNames) {
     for (final card in cards) {
