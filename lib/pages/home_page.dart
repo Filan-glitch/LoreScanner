@@ -17,7 +17,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return PersistentTabView(
+      backgroundColor: Colors.transparent,
       onTabChanged: (index) {
         _tabNotifier.value = index;
       },
@@ -46,6 +48,14 @@ class _HomePageState extends State<HomePage> {
       ],
       navBarBuilder: (navBarConfig) => Style1BottomNavBar(
         navBarConfig: navBarConfig,
+        navBarDecoration: NavBarDecoration(
+          color: theme.colorScheme.surface,
+          border: BoxBorder.fromLTRB(top: BorderSide(
+            color: theme.colorScheme.primary,
+            width: 2.0,
+          )),
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(16.0), topRight: Radius.circular(16.0)),
+        ),
       ),
     );
   }
