@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image/image.dart' as img;
+import 'package:lorescanner/service/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 
@@ -66,7 +67,7 @@ Future<ImageAnalysisResult> _analyzeImageInBackground(ImageAnalysisParams params
     metrics['text_recognition_ms'] = stopwatch.elapsedMilliseconds;
     
     final String text = recognizedText.text;
-    print('Recognized text: $text');
+    log.info('Recognized text: $text');
     
     // Find matching cards
     stopwatch.reset();
@@ -81,8 +82,8 @@ Future<ImageAnalysisResult> _analyzeImageInBackground(ImageAnalysisParams params
       recognizedText: text,
       performanceMetrics: metrics,
     );
-  } catch (e) {
-    print('Error in image analysis: $e');
+  } catch (e, st) {
+    log.severe('Error in image analysis', e, st);
     return ImageAnalysisResult(
       foundCards: [],
       recognizedText: '',
@@ -106,7 +107,7 @@ Future<InputImage> _prepareImage(String imagePath, ui.Rect? cropRegion) async {
     final originalImage = img.decodeImage(bytes);
     
     if (originalImage == null) {
-      print('Could not decode image for cropping, using original');
+      log.warning('Could not decode image for cropping, using original');
       return InputImage.fromFile(file);
     }
     
@@ -138,11 +139,11 @@ Future<InputImage> _prepareImage(String imagePath, ui.Rect? cropRegion) async {
     
     await croppedFile.writeAsBytes(img.encodeJpg(croppedImage));
     
-    print('Image cropped from ${imageWidth}x${imageHeight} to ${cropWidth}x${cropHeight}');
+    log.info('Image cropped from ${imageWidth}x${imageHeight} to ${cropWidth}x${cropHeight}');
     
     return InputImage.fromFile(croppedFile);
-  } catch (e) {
-    print('Error cropping image: $e, using original');
+  } catch (e, st) {
+    log.severe('Error cropping image, using original', e, st);
     return InputImage.fromFile(file);
   }
 }

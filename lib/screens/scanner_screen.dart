@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Card;
 import 'package:lorescanner/models/card.dart';
 import 'package:lorescanner/provider/tab_notifier.dart';
+import 'package:lorescanner/service/logging.dart';
 import 'package:lorescanner/widgets/found_cards_overview.dart';
 import 'package:lorescanner/widgets/card_template_overlay.dart';
 import 'package:lorescanner/service/initialization_service.dart';
@@ -76,7 +77,7 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
     // Get cameras from the centralized initialization service
     final cameras = _initService.cameras;
     if (cameras == null || cameras.isEmpty) {
-      print('No cameras available from initialization service');
+      log.severe('No cameras available from initialization service');
       return;
     }
 
@@ -91,14 +92,14 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
         setState(() {});
       }
       if (_cameraController!.value.hasError) {
-        print('Camera error: ${_cameraController!.value.errorDescription}');
+        log.severe('Camera error: ${_cameraController!.value.errorDescription}');
       }
     });
 
     try {
       await _cameraController!.initialize();
-    } catch (e) {
-      print('Error initializing camera controller: $e');
+    } catch (e, st) {
+      log.severe('Error initializing camera controller', e, st);
       if (e is CameraException) {
         switch (e.code) {
           case 'CameraAccessDenied':
@@ -114,15 +115,15 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
 
   Future<XFile?> _takePicture() async {
     if (_cameraController == null || !_cameraController!.value.isInitialized) {
-      print('Error: Camera is not initialized');
+      log.severe('Error: Camera is not initialized');
       return null;
     }
     try {
       final image = await _cameraController!.takePicture();
-      print('Picture taken: ${image.path}');
+      log.info('Picture taken: ${image.path}');
       return image;
-    } catch (e) {
-      print('Error taking picture: $e');
+    } catch (e, st) {
+      log.severe('Error taking picture', e, st);
     }
     return null;
   }
@@ -240,14 +241,14 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
               final totalTime = overallStopwatch.elapsedMilliseconds;
               final logEntry = 'Scan completed in ${totalTime}ms - Found ${result.foundCards.length} cards';
               _performanceLogs.add(logEntry);
-              print(logEntry);
+              log.info(logEntry);
               
               // Show performance metrics in debug mode
               if (kDebugMode) {
                 _showPerformanceDialog(result.performanceMetrics);
               }
               
-              print('Found cards: ${result.foundCards.length}');
+              log.info('Found cards: ${result.foundCards.length}');
               
               if (result.foundCards.isNotEmpty) {
                 final Map<String, dynamic>? map = await showDialog(
@@ -268,8 +269,8 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
                 }
               }
             }
-          } catch (error) {
-            print('Error analyzing image: $error');
+          } catch (error, st) {
+            log.severe('Error analyzing image', error, st);
           } finally {
             if (mounted) {
               setState(() {

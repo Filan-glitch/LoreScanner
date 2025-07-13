@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' hide Card;
+import 'package:lorescanner/service/logging.dart';
 import 'package:lorescanner/widgets/splash_wrapper.dart';
 import 'package:provider/provider.dart';
 import 'package:lorescanner/provider/cards_provider.dart';
@@ -6,6 +7,8 @@ import 'package:lorescanner/provider/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  setupRootLogger();
+  log.info('Lorescanner starting up');
 
   // Initialize theme provider
   final themeProvider = ThemeProvider();

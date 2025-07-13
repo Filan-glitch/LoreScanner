@@ -3,6 +3,7 @@ import 'package:lorescanner/models/card.dart';
 import 'package:lorescanner/models/collection.dart';
 import 'package:lorescanner/models/price.dart';
 import 'package:lorescanner/service/database.dart' as db;
+import 'package:lorescanner/service/logging.dart';
 
 import '../constants.dart';
 
@@ -55,8 +56,8 @@ class CardsProvider extends ChangeNotifier {
       }
 
       _collection = Collection(entries: entries);
-    } catch (e) {
-      print('Error loading collection: $e');
+    } catch (e, st) {
+      log.severe('Error loading collection', e, st);
       _collection = Collection(entries: []);
     }
     
@@ -70,8 +71,8 @@ class CardsProvider extends ChangeNotifier {
     // Also persist to database
     try {
       await db.addCardToCollection(card.id, amount: amount, amountFoil: amountFoil);
-    } catch (e) {
-      print('Error persisting card to database: $e');
+    } catch (e, st) {
+      log.severe('Error persisting card to database', e, st);
     }
     
     notifyListeners();
@@ -83,8 +84,8 @@ class CardsProvider extends ChangeNotifier {
     // Also persist to database
     try {
       await db.removeCardFromCollection(card.id, amount: amount, amountFoil: amountFoil);
-    } catch (e) {
-      print('Error persisting card removal to database: $e');
+    } catch (e, st) {
+      log.severe('Error persisting card removal to database', e, st);
     }
 
     notifyListeners();
