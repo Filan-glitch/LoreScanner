@@ -20,15 +20,6 @@ class _CardDetailPageState extends State<CardDetailPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detailansicht'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share),
-            tooltip: 'Karte teilen',
-            onPressed: () {
-              // TODO: Implement share functionality
-            },
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -385,7 +376,8 @@ class _CardDetailPageState extends State<CardDetailPage> {
         children: [
           // Normal Container
           // Minus Button + Card Count in Collection + Plus Button
-          Expanded(
+          if (widget.card.foilTypes.contains('None'))
+            Expanded(
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Row(
@@ -421,7 +413,8 @@ class _CardDetailPageState extends State<CardDetailPage> {
           ),
           // Foil Container
           // Minus Button + Card Count in Collection + Plus Button
-          Expanded(
+          if (widget.card.foilTypes.length > 1 || !widget.card.foilTypes.contains('None'))
+            Expanded(
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Row(

@@ -9,6 +9,7 @@ class Card with CardMappable {
   // Relevant fields
   final int id;
   final String setCode;
+  final int number;
   final String simpleName;
   final String language;
   final String fullName;
@@ -16,6 +17,10 @@ class Card with CardMappable {
   final String story;
   final String type;
   final int cost;
+  final String? promoGrouping;
+
+  @MappableField(hook: FoilHook())
+  final List<String> foilTypes;
 
   @MappableField(hook: InkwellHook())
   final bool inkwell;
@@ -76,6 +81,7 @@ class Card with CardMappable {
     required this.id,
     required this.setCode,
     required this.images,
+    required this.number,
     required this.simpleName,
     required this.fullName,
     required this.rarity,
@@ -84,6 +90,8 @@ class Card with CardMappable {
     required this.inkwell,
     required this.cost,
     required this.externalLinks,
+    this.promoGrouping,
+    this.foilTypes = const [],
     this.language = 'de'
   });
 
@@ -113,6 +121,28 @@ class Ability {
     this.costs,
     this.costsText
   });
+}
+
+class FoilHook extends MappingHook {
+  const FoilHook();
+
+  @override
+  Object? beforeEncode(Object? value) {
+    if (value is List<String>) {
+      // Convert the map to a JSON string
+      return jsonEncode(value);
+    }
+    return value;
+  }
+
+  @override
+  Object? beforeDecode(Object? value) {
+    if (value is String) {
+      // Convert the JSON string back to a map
+      return jsonDecode(value) as List<dynamic>;
+    }
+    return value;
+  }
 }
 
 class InkwellHook extends MappingHook {

@@ -7,15 +7,15 @@ class ExportService {
 
     for (final entry in collection.entries) {
       final card = entry.card;
-      final foilCount = entry.foilCount;
-      final normalCount = entry.normalCount;
+      final foilCount = entry.amountFoil;
+      final normalCount = entry.amount;
 
       if (normalCount > 0) {
         buffer.writeln(
-            '${card.setNum},${card.cardNum},normal,$normalCount');
+            '${card.promoGrouping ?? card.setCode},${card.number},normal,$normalCount');
       }
       if (foilCount > 0) {
-        buffer.writeln('${card.setNum},${card.cardNum},foil,$foilCount');
+        buffer.writeln('${card.promoGrouping ?? card.setCode},${card.number},foil,$foilCount');
       }
     }
 
