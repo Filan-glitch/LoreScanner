@@ -5,6 +5,7 @@ import 'package:lorescanner/widgets/collection_item.dart';
 import 'package:provider/provider.dart';
 
 import '../dialogs/collection_filter_dialog.dart';
+import '../dialogs/export_dialog.dart';
 
 class CollectionScreen extends StatelessWidget {
   const CollectionScreen({super.key});
@@ -19,9 +20,12 @@ class CollectionScreen extends StatelessWidget {
         title: const Text('Sammlung'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () async {
-              await cardsProvider.refreshCollection();
+            icon: const Icon(Icons.share),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => const ExportDialog(),
+              );
             },
           ),
         ],

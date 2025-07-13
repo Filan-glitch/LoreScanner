@@ -254,25 +254,24 @@ class FoundCardsOverview extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context, {'card': card, 'foil': false});
-                      },
-                      icon: const Icon(Icons.credit_card),
-                      label: const Text('Normal'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: theme.colorScheme.onPrimary,
+                  if (card.foilTypes.contains('None'))
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => Navigator.pop(context, {'card': card, 'foil': false}),
+                        icon: const Icon(Icons.credit_card),
+                        label: const Text('Normal'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: theme.colorScheme.onPrimary,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
+                  if (card.foilTypes.contains('None'))
+                    const SizedBox(width: 12),
+                  if (card.foilTypes.length > 1 || !card.foilTypes.contains('None'))
+                    Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context, {'card': card, 'foil': true});
-                      },
+                      onPressed: () => Navigator.pop(context, {'card': card, 'foil': true}),
                       icon: const Icon(Icons.auto_awesome),
                       label: const Text('Foil'),
                       style: ElevatedButton.styleFrom(

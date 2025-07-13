@@ -14,6 +14,7 @@ Future<Database> openDB() async {
       await database.execute('''
         CREATE TABLE IF NOT EXISTS cards (
           id INTEGER PRIMARY KEY,
+          number INTEGER,
           images TEXT,
           setCode TEXT,
           simpleName TEXT,
@@ -25,6 +26,8 @@ Future<Database> openDB() async {
           inkwell INTEGER,
           cost INTEGER,
           externalLinks TEXT,
+          promoGrouping TEXT,
+          foilTypes TEXT,
           language TEXT DEFAULT 'de'
         );
       ''');

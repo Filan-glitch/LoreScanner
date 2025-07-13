@@ -4,6 +4,9 @@ import 'package:lorescanner/pages/home_page.dart';
 import 'package:lorescanner/provider/cards_provider.dart';
 import 'package:lorescanner/service/initialization_service.dart';
 
+import '../service/api.dart';
+import '../service/database.dart';
+
 /// Widget that handles the splash screen and app initialization
 class SplashWrapper extends StatefulWidget {
   const SplashWrapper({super.key});
@@ -27,7 +30,7 @@ class _SplashWrapperState extends State<SplashWrapper> {
   Future<void> _initializeApp() async {
     try {
       setState(() {
-        _initializationStatus = 'Initializing cameras...';
+        _initializationStatus = 'Initializing...';
       });
       
       // Initialize all services
@@ -41,6 +44,12 @@ class _SplashWrapperState extends State<SplashWrapper> {
       if (mounted) {
         final cardsProvider = context.read<CardsProvider>();
         _initService.initializeCardsProvider(cardsProvider);
+        if(cardsProvider.cards.isEmpty) {
+          await fetchCards('de').then((cards) {
+            insertCards(cards);
+            context.read<CardsProvider>().setCards(cards);
+          });
+        }
       }
       
       setState(() {
