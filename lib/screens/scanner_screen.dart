@@ -253,7 +253,7 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
                 final Map<String, dynamic>? map = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => FoundCardsOverview(foundCards: result.foundCards.toList()),
+                    builder: (context) => FoundCardsOverview(foundCards: result.foundCards),
                   ),
                 );
                 

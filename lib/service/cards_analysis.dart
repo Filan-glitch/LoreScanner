@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 
 import '../models/card.dart';
+import '../models/card_match.dart';
 
 /// Parameters for image analysis that can be passed to an isolate
 class ImageAnalysisParams {
@@ -25,7 +26,7 @@ class ImageAnalysisParams {
 
 /// Results from image analysis including performance metrics
 class ImageAnalysisResult {
-  final Set<Card> foundCards;
+  final List<CardMatch> foundCards;
   final String recognizedText;
   final Map<String, int> performanceMetrics;
 
@@ -83,7 +84,7 @@ Future<ImageAnalysisResult> _analyzeImageInBackground(ImageAnalysisParams params
   } catch (e) {
     print('Error in image analysis: $e');
     return ImageAnalysisResult(
-      foundCards: <Card>{},
+      foundCards: [],
       recognizedText: '',
       performanceMetrics: metrics,
     );
@@ -146,44 +147,59 @@ Future<InputImage> _prepareImage(String imagePath, ui.Rect? cropRegion) async {
   }
 }
 
-/// Finds cards that match the recognized text
-Set<Card> _findMatchingCards(String text, List<Card> cards) {
+/// Finds cards that match the recognized text and scores them
+List<CardMatch> _findMatchingCards(String text, List<Card> cards) {
   final lines = text.split('\n');
-  
-  // Find potential card names (uppercase lines longer than 1 character)
-  final potentialNames = lines.where(
-    (line) => line.isNotEmpty && line == line.toUpperCase() && line.length > 1,
-  ).toList();
-  
-  // Also check for mixed case lines that might be card names
-  potentialNames.addAll(lines.where(
-    (line) => line.isNotEmpty && line.length > 3 && _isLikelyCardName(line),
-  ));
-  
-  final foundCards = <Card>{};
-  
+
+  // Find potential card names
+  final potentialNames = lines
+      .where((line) =>
+          (line.isNotEmpty &&
+              line == line.toUpperCase() &&
+              line.length > 1) ||
+          (line.isNotEmpty && line.length > 3 && _isLikelyCardName(line)))
+      .toSet(); // Use a Set to avoid duplicate names
+
+  final foundCards = <CardMatch>[];
+  final matchedCardIds = <String>{}; // Track matched card IDs to avoid duplicates
+
   for (final potentialName in potentialNames) {
-    final matches = cards.where((card) {
+    for (final card in cards) {
+      if (matchedCardIds.contains(card.id)) continue; // Skip if already matched
+
       final cardName = card.simpleName.toLowerCase();
       final searchName = potentialName.toLowerCase();
-      
+      double score = 0;
+
       // Exact match
-      if (cardName == searchName) return true;
-      
-      // Partial match (card name contains search term or vice versa)
-      if (cardName.contains(searchName) || searchName.contains(cardName)) {
-        return true;
+      if (cardName == searchName) {
+        score = 1.0;
       }
-      
-      // Fuzzy match for common OCR errors
-      if (_fuzzyMatch(cardName, searchName)) return true;
-      
-      return false;
-    });
-    
-    foundCards.addAll(matches);
+      // Partial match
+      else if (cardName.contains(searchName) ||
+          searchName.contains(cardName)) {
+        final double lenScore = searchName.length / cardName.length;
+        score = 0.8 * lenScore; // Base score for partial match, adjusted by length
+      }
+      // Fuzzy match
+      else if (_fuzzyMatch(cardName, searchName)) {
+        final distance = _levenshteinDistance(cardName, searchName);
+        final maxLength = cardName.length > searchName.length
+            ? cardName.length
+            : searchName.length;
+        score = 0.6 * (1 - (distance / maxLength)); // Base score for fuzzy
+      }
+
+      if (score > 0) {
+        foundCards.add(CardMatch(card: card, score: score));
+        matchedCardIds.add(card.id);
+      }
+    }
   }
-  
+
+  // Sort by score descending
+  foundCards.sort((a, b) => b.score.compareTo(a.score));
+
   return foundCards;
 }
 
