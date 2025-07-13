@@ -17,6 +17,14 @@ Future<Database> openDB() async {
           images TEXT,
           setCode TEXT,
           simpleName TEXT,
+          artistsText TEXT,
+          fullName TEXT,
+          rarity TEXT,
+          story TEXT,
+          type TEXT,
+          inkwell INTEGER,
+          cost INTEGER,
+          externalLinks TEXT,
           language TEXT DEFAULT 'de'
         );
       ''');
@@ -70,6 +78,38 @@ Future<void> addCardToCollection(int cardId, {int amount = 1, int amountFoil = 0
     {'cardId': cardId, 'amount': amount, 'amountFoil': amountFoil},
     conflictAlgorithm: ConflictAlgorithm.replace,
   );
+  await db.close();
+}
+
+Future<void> removeCardFromCollection(int cardId, {int amount = 1, int amountFoil = 0}) async {
+  final Database db = await openDB();
+  // Check if the card exists in the collection
+  final List<Map<String, dynamic>> existingCards = await db.query(
+    'collection',
+    where: 'cardId = ?',
+    whereArgs: [cardId],
+  );
+  if (existingCards.isNotEmpty) {
+    final int newAmount = existingCards[0]['amount'] - amount;
+    final int newAmountFoil = existingCards[0]['amountFoil'] - amountFoil;
+
+    if (newAmount <= 0 && newAmountFoil <= 0) {
+      // If both amounts are zero or less, delete the entry
+      await db.delete(
+        'collection',
+        where: 'cardId = ?',
+        whereArgs: [cardId],
+      );
+    } else {
+      // Otherwise, update the amounts
+      await db.update(
+        'collection',
+        {'amount': newAmount > 0 ? newAmount : 0, 'amountFoil': newAmountFoil > 0 ? newAmountFoil : 0},
+        where: 'cardId = ?',
+        whereArgs: [cardId],
+      );
+    }
+  }
   await db.close();
 }
 

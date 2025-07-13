@@ -232,30 +232,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
                     amount: foil ? 0 : 1,
                     amountFoil: foil ? 1 : 0,
                   );
-                  
-                  // Show success message
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Karte ${card.simpleName} (${foil ? 'Foil' : 'Normal'}) gespeichert')),
-                    );
-                  }
                 }
               } else {
-                // No cards found
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Keine Karten erkannt. Versuche es erneut.')),
-                  );
-                }
               }
             }
           } catch (error) {
             print('Error analyzing image: $error');
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Fehler beim Analysieren des Bildes')),
-              );
-            }
           } finally {
             if (mounted) {
               setState(() {

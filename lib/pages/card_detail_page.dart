@@ -1,16 +1,25 @@
 import 'package:flutter/material.dart' hide Card;
 import 'package:lorescanner/models/card.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lorescanner/provider/cards_provider.dart';
+import 'package:provider/provider.dart';
 
-class CardDetailPage extends StatelessWidget {
+class CardDetailPage extends StatefulWidget {
   final Card card;
+
   const CardDetailPage({super.key, required this.card});
+
+  @override
+  _CardDetailPageState createState() => _CardDetailPageState();
+}
+
+class _CardDetailPageState extends State<CardDetailPage> {
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(card.simpleName),
+        title: const Text('Detailansicht'),
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
@@ -27,13 +36,19 @@ class CardDetailPage extends StatelessWidget {
           children: [
             // Large card image at the top
             Semantics(
-              label: 'Kartenbild für ${card.simpleName}',
+              label: 'Kartenbild für ${widget.card.fullName}',
               child: _buildCardImage(context),
             ),
             
             // Card name and basic info
             _buildCardHeader(context),
-            
+
+            // Collection edit section
+            _buildCollectionEdit(context),
+
+            // Card prices
+            _buildCardPrices(context),
+
             // Card attributes section
             _buildCardAttributes(context),
             
@@ -64,10 +79,10 @@ class CardDetailPage extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: card.images['full'] != null
+        child: widget.card.images['full'] != null
             ? CachedNetworkImage(
-                imageUrl: card.images['full']!,
-                fit: BoxFit.cover,
+                imageUrl: widget.card.images['full']!,
+                fit: BoxFit.contain,
                 placeholder: (context, url) => Container(
                   color: theme.colorScheme.surfaceContainerHighest,
                   child: Center(
@@ -164,27 +179,10 @@ class CardDetailPage extends StatelessWidget {
         children: [
           // Card name
           Text(
-            card.simpleName,
+            widget.card.fullName,
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 8),
-          
-          // Set code
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              card.setCode,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer,
-                fontWeight: FontWeight.w600,
-              ),
             ),
           ),
           const SizedBox(height: 24),
@@ -322,16 +320,165 @@ class CardDetailPage extends StatelessWidget {
     );
   }
 
+  Widget _buildCardPrices(BuildContext context) {
+    final theme = Theme.of(context);
+
+    final cardsProvider = Provider.of<CardsProvider>(context);
+    final cardmarketId = int.tryParse(widget.card.externalLinks['cardmarketId'] ?? '');
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withAlpha(51),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section header
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.attach_money,
+                  color: theme.colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Cardmarket Preise',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Attributes list
+          ...cardsProvider.prices.firstWhere((price) => price.idProduct == cardmarketId).attributes.map((entry) => _buildAttributeItem(context, entry.key, entry.value)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCollectionEdit(BuildContext context) {
+    final theme = Theme.of(context);
+
+    final cardsProvider = Provider.of<CardsProvider>(context);
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withAlpha(51),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Normal Container
+          // Minus Button + Card Count in Collection + Plus Button
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Minus Button
+                  IconButton(
+                    icon: Icon(Icons.remove_circle_outline, color: theme.colorScheme.primary),
+                    onPressed: () {
+                      cardsProvider.removeCardFromCollection(widget.card, amount: 1);
+                      setState(() {});
+                    }
+                  ),
+                  // Card Count in Collection
+                  Text(
+                    '${cardsProvider.collection.getEntryByCard(widget.card)?.amount ?? 0}',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  // Plus Button
+                  IconButton(
+                    icon: Icon(Icons.add_circle_outline, color: theme.colorScheme.primary),
+                    onPressed: () {
+                      cardsProvider.addCardToCollection(widget.card, amount: 1);
+                      setState(() {});
+                    }
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Foil Container
+          // Minus Button + Card Count in Collection + Plus Button
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Minus Button
+                  IconButton(
+                      icon: Icon(Icons.remove_circle_outline, color: theme.colorScheme.primary),
+                      onPressed: () {
+                        cardsProvider.removeCardFromCollection(widget.card, amountFoil: 1);
+                        setState(() {});
+                      }
+                  ),
+                  // Card Count in Collection
+                  Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.secondaryContainer,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '${cardsProvider.collection.getEntryByCard(widget.card)?.amountFoil ?? 0}',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.secondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  // Plus Button
+                  IconButton(
+                      icon: Icon(Icons.add_circle_outline, color: theme.colorScheme.primary),
+                      onPressed: () {
+                        cardsProvider.addCardToCollection(widget.card, amountFoil: 1);
+                        setState(() {});
+                      }
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      )
+    );
+  }
+
   Map<String, dynamic> _getCardAttributes() {
     final attributes = <String, dynamic>{};
-    
+
     // Add current card attributes (always available)
-    attributes['ID'] = card.id;
-    attributes['Sprache'] = _getLanguageLabel(card.language);
-    
+    attributes['Geschichte'] = widget.card.story;
+
     // Add image information
-    if (card.images.isNotEmpty) {
-      final imageTypes = card.images.keys.map((key) => _getImageTypeLabel(key)).join(', ');
+    if (widget.card.images.isNotEmpty) {
+      final imageTypes = widget.card.images.keys.map((key) => _getImageTypeLabel(key)).join(', ');
       attributes['Verfügbare Bilder'] = imageTypes;
     }
     
@@ -340,13 +487,11 @@ class CardDetailPage extends StatelessWidget {
     // This makes the detail page automatically adapt to new fields.
     // Example implementation for future use:
     /*
-    if (card.name != null) attributes['Vollständiger Name'] = card.name;
-    if (card.type != null) attributes['Typ'] = card.type;
-    if (card.cost != null) attributes['Kosten'] = card.cost;
+
     if (card.strength != null) attributes['Stärke'] = card.strength;
     if (card.willpower != null) attributes['Willenskraft'] = card.willpower;
     if (card.lore != null) attributes['Wissen'] = card.lore;
-    if (card.rarity != null) attributes['Seltenheit'] = card.rarity;
+
     if (card.color != null) attributes['Farbe'] = card.color;
     if (card.colors != null && card.colors!.isNotEmpty) {
       attributes['Farben'] = card.colors!.join(', ');
@@ -359,38 +504,19 @@ class CardDetailPage extends StatelessWidget {
     }
     if (card.flavorText != null) attributes['Geschmackstext'] = card.flavorText;
     if (card.fullText != null) attributes['Volltext'] = card.fullText;
-    if (card.artists != null && card.artists!.isNotEmpty) {
-      attributes['Künstler'] = card.artists!.join(', ');
-    }
-    if (card.story != null) attributes['Geschichte'] = card.story;
+
+
     if (card.variant != null) attributes['Variante'] = card.variant;
     if (card.version != null) attributes['Version'] = card.version;
     if (card.number != null) attributes['Nummer'] = card.number;
     if (card.maxCopiesInDeck != null) attributes['Max. Kopien im Deck'] = card.maxCopiesInDeck;
     if (card.bannedSince != null) attributes['Verboten seit'] = card.bannedSince;
     if (card.moveCost != null) attributes['Bewegungskosten'] = card.moveCost;
-    if (card.inkwell != null) attributes['Tintenfass'] = card.inkwell! ? 'Ja' : 'Nein';
+
     if (card.isExternalReveal != null) attributes['Externe Enthüllung'] = card.isExternalReveal! ? 'Ja' : 'Nein';
     */
     
     return attributes;
-  }
-  
-  String _getLanguageLabel(String language) {
-    switch (language.toLowerCase()) {
-      case 'de':
-        return 'Deutsch';
-      case 'en':
-        return 'English';
-      case 'fr':
-        return 'Français';
-      case 'it':
-        return 'Italiano';
-      case 'es':
-        return 'Español';
-      default:
-        return language.toUpperCase();
-    }
   }
   
   String _getImageTypeLabel(String imageType) {
@@ -424,9 +550,6 @@ class CardDetailPage extends StatelessWidget {
     return value.toString();
   }
 
-  /// Helper method to determine if a card attribute should be displayed
-  /// This can be used to filter out attributes based on user preferences
-  /// or card type in future implementations
   bool _shouldShowAttribute(String key, dynamic value) {
     // Hide null or empty values
     if (value == null) return false;
@@ -435,10 +558,10 @@ class CardDetailPage extends StatelessWidget {
     if (value is Map && value.isEmpty) return false;
     
     // Always show basic attributes
-    if (['ID', 'Sprache', 'Verfügbare Bilder'].contains(key)) return true;
+    if (['Geschichte'].contains(key)) return true;
     
     // In future, this could be expanded to handle user preferences
     // or card-type-specific attribute filtering
-    return true;
+    return false;
   }
 }
