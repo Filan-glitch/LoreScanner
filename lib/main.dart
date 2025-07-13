@@ -7,7 +7,6 @@ import 'package:lorescanner/provider/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  setupRootLogger();
   log.info('Lorescanner starting up');
 
   // Initialize theme provider
