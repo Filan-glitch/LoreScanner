@@ -61,43 +61,45 @@ class _CollectionFilterDialogState extends State<CollectionFilterDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      content: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        children: [
-          // Die oberste Checkbox
-          _buildTopCheckbox(),
-          const SizedBox(height: 8),
-          // Erstellt die Liste der aufklappbaren Filtersektionen
-          ..._filterCategories.map((category) {
-            return Card(
-              margin: const EdgeInsets.symmetric(vertical: 4.0),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: ExpansionTile(
-                title: Text(category.title, style: const TextStyle(fontWeight: FontWeight.w600)),
-                childrenPadding: const EdgeInsets.all(16).copyWith(top: 0),
-                // Baut entweder das benutzerdefinierte Widget oder die Liste von Checkboxen
-                children: [
-                  if (category.customWidget != null)
-                    category.customWidget!
-                  else
-                    ...category.options.map((option) {
-                      return CheckboxListTile(
-                        title: Text(option.name),
-                        value: option.isSelected,
-                        onChanged: (bool? value) {
-                          setState(() {
-                            option.isSelected = value ?? false;
-                          });
-                        },
-                        controlAffinity: ListTileControlAffinity.leading,
-                        contentPadding: EdgeInsets.zero,
-                      );
-                    }).toList(),
-                ],
-              ),
-            );
-          }).toList(),
-        ],
+      content: Expanded(
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          children: [
+            // Die oberste Checkbox
+            _buildTopCheckbox(),
+            const SizedBox(height: 8),
+            // Erstellt die Liste der aufklappbaren Filtersektionen
+            ..._filterCategories.map((category) {
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 4.0),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: ExpansionTile(
+                  title: Text(category.title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  childrenPadding: const EdgeInsets.all(16).copyWith(top: 0),
+                  // Baut entweder das benutzerdefinierte Widget oder die Liste von Checkboxen
+                  children: [
+                    if (category.customWidget != null)
+                      category.customWidget!
+                    else
+                      ...category.options.map((option) {
+                        return CheckboxListTile(
+                          title: Text(option.name),
+                          value: option.isSelected,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              option.isSelected = value ?? false;
+                            });
+                          },
+                          controlAffinity: ListTileControlAffinity.leading,
+                          contentPadding: EdgeInsets.zero,
+                        );
+                      }).toList(),
+                  ],
+                ),
+              );
+            }).toList(),
+          ],
+        ),
       ),
       actions: [
         TextButton(
