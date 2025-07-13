@@ -2,9 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:lorescanner/models/card.dart' as lore;
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lorescanner/models/card_match.dart';
 
 class FoundCardsOverview extends StatelessWidget {
-  final List<lore.Card> foundCards;
+  final List<CardMatch> foundCards;
   const FoundCardsOverview({super.key, required this.foundCards});
 
   @override
@@ -99,8 +100,8 @@ class FoundCardsOverview extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             itemCount: foundCards.length,
             itemBuilder: (context, index) {
-              final card = foundCards[index];
-              return _buildCardItem(context, card);
+              final cardMatch = foundCards[index];
+              return _buildCardItem(context, cardMatch.card);
             },
           ),
         ),
