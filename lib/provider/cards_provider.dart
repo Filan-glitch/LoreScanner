@@ -10,12 +10,14 @@ import '../constants.dart';
 class CardsProvider extends ChangeNotifier {
   List<Card> _cards = [];
   Collection _collection = Collection(entries: []);
+  Collection _filteredCollection = Collection(entries: []);
   List<Price> _prices = [];
   bool _isLoadingCollection = false;
   final Map<String, Set<dynamic>> filterMap = {};
+  final Map<String, Set<dynamic>> _activeFilters = {};
 
   List<Card> get cards => _cards;
-  Collection get collection => _collection;
+  Collection get collection => _filteredCollection;
   List<Price> get prices => _prices;
   bool get isLoadingCollection => _isLoadingCollection;
 
@@ -56,9 +58,12 @@ class CardsProvider extends ChangeNotifier {
       }
 
       _collection = Collection(entries: entries);
+      _filteredCollection = _collection;
+      _extractFilterOptions();
     } catch (e, st) {
       log.severe('Error loading collection', e, st);
       _collection = Collection(entries: []);
+      _filteredCollection = Collection(entries: []);
     }
     
     _isLoadingCollection = false;
@@ -117,6 +122,32 @@ class CardsProvider extends ChangeNotifier {
 
   void clearCollection() {
     _collection = Collection(entries: []);
+    _filteredCollection = Collection(entries: []);
+    notifyListeners();
+  }
+
+  void applyFilters(Map<String, Set<dynamic>> newFilters) {
+    _activeFilters.clear();
+    _activeFilters.addAll(newFilters);
+
+    if (_activeFilters.isEmpty) {
+      _filteredCollection = _collection;
+    } else {
+      final filteredEntries = _collection.entries.where((entry) {
+        final cardMap = entry.card.toMap();
+        return _activeFilters.entries.every((filterEntry) {
+          final cardValue = cardMap[filterEntry.key];
+          return filterEntry.value.contains(cardValue);
+        });
+      }).toList();
+      _filteredCollection = Collection(entries: filteredEntries);
+    }
+    notifyListeners();
+  }
+
+  void resetFilters() {
+    _activeFilters.clear();
+    _filteredCollection = _collection;
     notifyListeners();
   }
 }

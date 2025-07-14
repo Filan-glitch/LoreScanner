@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/filter.dart';
+import '../provider/cards_provider.dart';
 import '../widgets/color_filter_widget.dart';
 
 class CollectionFilterDialog extends StatefulWidget {
-  const CollectionFilterDialog({super.key});
+  final Map<String, Set<dynamic>> filterMap;
+
+  const CollectionFilterDialog({
+    super.key,
+    required this.filterMap,
+  });
 
   @override
   State<CollectionFilterDialog> createState() => _CollectionFilterDialogState();
@@ -13,6 +20,8 @@ class CollectionFilterDialog extends StatefulWidget {
 class _CollectionFilterDialogState extends State<CollectionFilterDialog> {
   // Zustand für die oberste Checkbox
   bool _showOnlyMyCards = false;
+  final Map<String, Set<dynamic>> _selectedFilters = {};
+  final ValueNotifier<bool> _resetNotifier = ValueNotifier(false);
 
   // Beispieldaten für die Filterkategorien und ihre Optionen
   // In einer echten App würden diese Daten von einer API oder Datenbank kommen
@@ -24,21 +33,18 @@ class _CollectionFilterDialogState extends State<CollectionFilterDialog> {
     _filterCategories = [
       FilterCategory(
         title: 'Farben',
-        // Ein benutzerdefiniertes Widget für die Farbauswahl, wie im Screenshot
-        customWidget: const ColorFilterWidget(),
+        customWidget: ColorFilterWidget(resetNotifier: _resetNotifier),
       ),
-      FilterCategory(
-        title: 'Typen',
-        options: [],
-      ),
-      FilterCategory(
-        title: 'Kosten',
-        options: [],
-      ),
-      FilterCategory(
-        title: 'Franchise',
-        options: []
-      ),
+      ...widget.filterMap.entries
+          .where((entry) => entry.key != 'color')
+          .map((entry) {
+        return FilterCategory(
+          title: entry.key,
+          options: entry.value
+              .map((value) => FilterOption(name: value.toString()))
+              .toList(),
+        );
+      }).toList(),
     ];
   }
 
@@ -46,6 +52,7 @@ class _CollectionFilterDialogState extends State<CollectionFilterDialog> {
   void _resetFilters() {
     setState(() {
       _showOnlyMyCards = false;
+      _selectedFilters.clear();
       // Iteriert durch alle Kategorien und Optionen und setzt sie zurück
       for (var category in _filterCategories) {
         for (var option in category.options) {
@@ -54,6 +61,7 @@ class _CollectionFilterDialogState extends State<CollectionFilterDialog> {
       }
       // Hinweis: Der Zustand des ColorFilterWidget müsste hier auch zurückgesetzt werden.
       // Für die Demo bleibt es einfach.
+      _resetNotifier.value = !_resetNotifier.value;
     });
   }
 
@@ -61,9 +69,10 @@ class _CollectionFilterDialogState extends State<CollectionFilterDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      content: Expanded(
+      content: SizedBox(
+        width: double.maxFinite,
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          shrinkWrap: true,
           children: [
             // Die oberste Checkbox
             _buildTopCheckbox(),
@@ -88,6 +97,19 @@ class _CollectionFilterDialogState extends State<CollectionFilterDialog> {
                           onChanged: (bool? value) {
                             setState(() {
                               option.isSelected = value ?? false;
+                              if (option.isSelected) {
+                                _selectedFilters
+                                    .putIfAbsent(category.title, () => {})
+                                    .add(option.name);
+                              } else {
+                                _selectedFilters[category.title]
+                                    ?.remove(option.name);
+                                if (_selectedFilters[category.title]
+                                        ?.isEmpty ??
+                                    false) {
+                                  _selectedFilters.remove(category.title);
+                                }
+                              }
                             });
                           },
                           controlAffinity: ListTileControlAffinity.leading,
@@ -104,13 +126,15 @@ class _CollectionFilterDialogState extends State<CollectionFilterDialog> {
       actions: [
         TextButton(
           onPressed: () {
-            // Filter zurücksetzen und Dialog schließen
+            context.read<CardsProvider>().resetFilters();
+            Navigator.of(context).pop();
           },
           child: const Text('Zurücksetzen'),
         ),
         ElevatedButton(
           onPressed: () {
-            // Filter anwenden und Dialog schließen
+            context.read<CardsProvider>().applyFilters(_selectedFilters);
+            Navigator.of(context).pop();
           },
           child: const Text('Anwenden'),
         ),
