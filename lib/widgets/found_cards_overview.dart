@@ -242,7 +242,7 @@ class FoundCardsOverview extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(card.simpleName),
+          title: Text(card.fullName, style: theme.textTheme.headlineSmall),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
