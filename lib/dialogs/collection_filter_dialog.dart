@@ -30,6 +30,7 @@ class _CollectionFilterDialogState extends State<CollectionFilterDialog> {
   @override
   void initState() {
     super.initState();
+    _selectedFilters.addAll(context.read<CardsProvider>().activeFilters);
     _filterCategories = [
       FilterCategory(
         title: 'Farben',
@@ -40,9 +41,14 @@ class _CollectionFilterDialogState extends State<CollectionFilterDialog> {
           .map((entry) {
         return FilterCategory(
           title: entry.key,
-          options: entry.value
-              .map((value) => FilterOption(name: value.toString()))
-              .toList(),
+          options: entry.value.map((value) {
+            final isSelected =
+                _selectedFilters[entry.key]?.contains(value.toString()) ?? false;
+            return FilterOption(
+              name: value.toString(),
+              isSelected: isSelected,
+            );
+          }).toList(),
         );
       }).toList(),
     ];

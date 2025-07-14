@@ -14,7 +14,7 @@ class CardsProvider extends ChangeNotifier {
   List<Price> _prices = [];
   bool _isLoadingCollection = false;
   final Map<String, Set<dynamic>> filterMap = {};
-  final Map<String, Set<dynamic>> _activeFilters = {};
+  final Map<String, Set<dynamic>> activeFilters = {};
 
   List<Card> get cards => _cards;
   Collection get collection => _filteredCollection;
@@ -127,15 +127,15 @@ class CardsProvider extends ChangeNotifier {
   }
 
   void applyFilters(Map<String, Set<dynamic>> newFilters) {
-    _activeFilters.clear();
-    _activeFilters.addAll(newFilters);
+    activeFilters.clear();
+    activeFilters.addAll(newFilters);
 
-    if (_activeFilters.isEmpty) {
+    if (activeFilters.isEmpty) {
       _filteredCollection = _collection;
     } else {
       final filteredEntries = _collection.entries.where((entry) {
         final cardMap = entry.card.toMap();
-        return _activeFilters.entries.every((filterEntry) {
+        return activeFilters.entries.every((filterEntry) {
           final cardValue = cardMap[filterEntry.key];
           return filterEntry.value.contains(cardValue);
         });
@@ -146,7 +146,7 @@ class CardsProvider extends ChangeNotifier {
   }
 
   void resetFilters() {
-    _activeFilters.clear();
+    activeFilters.clear();
     _filteredCollection = _collection;
     notifyListeners();
   }
