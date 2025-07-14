@@ -2,7 +2,12 @@
 import 'package:flutter/material.dart';
 
 class ColorFilterWidget extends StatefulWidget {
-  const ColorFilterWidget({super.key});
+  final ValueNotifier<bool>? resetNotifier;
+
+  const ColorFilterWidget({
+    super.key,
+    this.resetNotifier,
+  });
 
   @override
   State<ColorFilterWidget> createState() => _ColorFilterWidgetState();
@@ -18,6 +23,26 @@ class _ColorFilterWidgetState extends State<ColorFilterWidget> {
     {'icon': Icons.water_drop, 'color': Colors.blue, 'isSelected': false},
     {'icon': Icons.security, 'color': Colors.grey, 'isSelected': false},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    widget.resetNotifier?.addListener(_reset);
+  }
+
+  @override
+  void dispose() {
+    widget.resetNotifier?.removeListener(_reset);
+    super.dispose();
+  }
+
+  void _reset() {
+    setState(() {
+      for (var colorData in _colors) {
+        colorData['isSelected'] = false;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

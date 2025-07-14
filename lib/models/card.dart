@@ -18,6 +18,7 @@ class Card with CardMappable {
   final String type;
   final int cost;
   final String? promoGrouping;
+  final String? color;
 
   @MappableField(hook: FoilHook())
   final List<String> foilTypes;
@@ -91,6 +92,7 @@ class Card with CardMappable {
     required this.cost,
     required this.externalLinks,
     this.promoGrouping,
+    this.color,
     this.foilTypes = const [],
     this.language = 'de'
   });

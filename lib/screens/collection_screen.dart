@@ -35,7 +35,9 @@ class CollectionScreen extends StatelessWidget {
           // Filter
           showDialog(
             context: context,
-            builder: (context) => const CollectionFilterDialog(),
+            builder: (context) => CollectionFilterDialog(
+              filterMap: cardsProvider.filterMap,
+            ),
           );
         },
         child: const Icon(Icons.filter_alt),
@@ -47,13 +49,13 @@ class CollectionScreen extends StatelessWidget {
 
   Widget _buildBody(BuildContext context, CardsProvider cardsProvider, Collection collection) {
     final theme = Theme.of(context);
-    
+
     if (cardsProvider.isLoadingCollection) {
       return const Center(
         child: CircularProgressIndicator(),
       );
     }
-    
+
     if (collection.entries.isEmpty) {
       return Center(
         child: Padding(
@@ -95,58 +97,92 @@ class CollectionScreen extends StatelessWidget {
         ),
       );
     }
-    
+
     return Column(
       children: [
-        // Statistics header
-        Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatItem(
-                context,
-                'Karten',
-                '${collection.entries.length}',
-                Icons.credit_card,
-              ),
-              Container(
-                height: 40,
-                width: 1,
-                color: theme.colorScheme.onPrimaryContainer.withAlpha(51),
-              ),
-              _buildStatItem(
-                context,
-                'Gesamt',
-                '${collection.totalCards}',
-                Icons.inventory_2,
-              ),
-            ],
-          ),
-        ),
-        
-        // Collection list
+        _buildStatisticsHeader(context, collection),
         Expanded(
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
-              childAspectRatio: 0.7,
-            ),
-            itemCount: collection.entries.length,
-            itemBuilder: (context, index) {
-              final entry = collection.entries[index].card;
-              return CollectionItem(item: entry);
-            },
-          )
-        )
+          child: _buildGroupedCollection(collection),
+        ),
       ],
+    );
+  }
+
+  Widget _buildStatisticsHeader(BuildContext context, Collection collection) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildStatItem(
+            context,
+            'Karten',
+            '${collection.entries.length}',
+            Icons.credit_card,
+          ),
+          Container(
+            height: 40,
+            width: 1,
+            color: theme.colorScheme.onPrimaryContainer.withAlpha(51),
+          ),
+          _buildStatItem(
+            context,
+            'Gesamt',
+            '${collection.totalCards}',
+            Icons.inventory_2,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGroupedCollection(Collection collection) {
+    final groupedEntries = collection.entries.fold<Map<String, List>>(
+      {},
+      (map, entry) {
+        map.putIfAbsent(entry.card.setCode, () => []).add(entry);
+        return map;
+      },
+    );
+
+    final sortedKeys = groupedEntries.keys.toList()
+      ..sort((a, b) =>
+          groupedEntries[b]!.length.compareTo(groupedEntries[a]!.length));
+
+    return ListView.builder(
+      itemCount: sortedKeys.length,
+      itemBuilder: (context, index) {
+        final setCode = sortedKeys[index];
+        final entries = groupedEntries[setCode]!;
+        entries.sort((a, b) => a.card.number.compareTo(b.card.number));
+
+        return ExpansionTile(
+          title: Text('$setCode (${entries.length})'),
+          children: [
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                childAspectRatio: 0.7,
+              ),
+              itemCount: entries.length,
+              itemBuilder: (context, index) {
+                final entry = entries[index].card;
+                return CollectionItem(item: entry);
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
