@@ -13,6 +13,7 @@ class CardsProvider extends ChangeNotifier {
   Collection _filteredCollection = Collection(entries: []);
   List<Price> _prices = [];
   bool _isLoadingCollection = false;
+  bool _showOnlyMyCards = false;
   final Map<String, Set<dynamic>> filterMap = {};
   final Map<String, Set<dynamic>> activeFilters = {};
 
@@ -20,6 +21,7 @@ class CardsProvider extends ChangeNotifier {
   Collection get collection => _filteredCollection;
   List<Price> get prices => _prices;
   bool get isLoadingCollection => _isLoadingCollection;
+  bool get showOnlyMyCards => _showOnlyMyCards;
 
   void _extractFilterOptions() {
     for (final attribute in filterAttributes) {
@@ -39,24 +41,21 @@ class CardsProvider extends ChangeNotifier {
   Future<void> loadCollection() async {
     _isLoadingCollection = true;
     notifyListeners();
-    
     try {
-      // Fetch all cards and the collection map
       final List<Card> allCards = await db.fetchCardsFromDB();
       final Map<int, Map<String, int>> collectionData = await db.fetchCollectionFromDB();
       final List<CollectionEntry> entries = [];
 
       for (final card in allCards) {
         final entryData = collectionData[card.id];
-        if (entryData != null) {
-          entries.add(CollectionEntry(
-            card: card,
-            amount: entryData['amount'] ?? 0,
-            amountFoil: entryData['amountFoil'] ?? 0,
-          ));
-        }
+        entries.add(CollectionEntry(
+          card: card,
+          amount: entryData?['amount'] ?? 0,
+          amountFoil: entryData?['amountFoil'] ?? 0,
+        ));
       }
 
+      _cards = allCards;
       _collection = Collection(entries: entries);
       _filteredCollection = _collection;
       _extractFilterOptions();
@@ -65,7 +64,6 @@ class CardsProvider extends ChangeNotifier {
       _collection = Collection(entries: []);
       _filteredCollection = Collection(entries: []);
     }
-    
     _isLoadingCollection = false;
     notifyListeners();
   }
@@ -130,10 +128,27 @@ class CardsProvider extends ChangeNotifier {
     activeFilters.clear();
     activeFilters.addAll(newFilters);
 
+    _applyFilter();
+    notifyListeners();
+  }
+
+  void toggleShowOnlyMyCards() {
+    _showOnlyMyCards = !_showOnlyMyCards;
+    _applyFilter();
+    notifyListeners();
+  }
+
+  void _applyFilter() {
+    List<CollectionEntry> entriesToFilter = _collection.entries;
+
+    if (_showOnlyMyCards) {
+      entriesToFilter = entriesToFilter.where((entry) => entry.amount > 0 || entry.amountFoil > 0).toList();
+    }
+
     if (activeFilters.isEmpty) {
-      _filteredCollection = _collection;
+      _filteredCollection = Collection(entries: entriesToFilter);
     } else {
-      final filteredEntries = _collection.entries.where((entry) {
+      final filteredEntries = entriesToFilter.where((entry) {
         final cardMap = entry.card.toMap();
         return activeFilters.entries.every((filterEntry) {
           final cardValue = cardMap[filterEntry.key];
@@ -142,7 +157,6 @@ class CardsProvider extends ChangeNotifier {
       }).toList();
       _filteredCollection = Collection(entries: filteredEntries);
     }
-    notifyListeners();
   }
 
   void resetFilters() {

@@ -19,7 +19,7 @@ class CollectionFilterDialog extends StatefulWidget {
 
 class _CollectionFilterDialogState extends State<CollectionFilterDialog> {
   // Zustand für die oberste Checkbox
-  bool _showOnlyMyCards = false;
+  late bool _showOnlyMyCards;
   final Map<String, Set<dynamic>> _selectedFilters = {};
   final ValueNotifier<bool> _resetNotifier = ValueNotifier(false);
 
@@ -30,11 +30,23 @@ class _CollectionFilterDialogState extends State<CollectionFilterDialog> {
   @override
   void initState() {
     super.initState();
-    _selectedFilters.addAll(context.read<CardsProvider>().activeFilters);
+    final cardsProvider = context.read<CardsProvider>();
+    _selectedFilters.addAll(cardsProvider.activeFilters);
+    _showOnlyMyCards = cardsProvider.showOnlyMyCards;
     _filterCategories = [
       FilterCategory(
         title: 'Farben',
-        customWidget: ColorFilterWidget(resetNotifier: _resetNotifier),
+        customWidget: ColorFilterWidget(
+          resetNotifier: _resetNotifier,
+          initialColors: _selectedFilters['color']?.toSet() ?? {},
+          onColorChanged: (colors) {
+            if (colors.isEmpty) {
+              _selectedFilters.remove('color');
+            } else {
+              _selectedFilters['color'] = colors;
+            }
+          },
+        ),
       ),
       ...widget.filterMap.entries
           .where((entry) => entry.key != 'color')
@@ -157,6 +169,7 @@ class _CollectionFilterDialogState extends State<CollectionFilterDialog> {
         title: const Text('Zeige nur Karten aus meiner Sammlung'),
         value: _showOnlyMyCards,
         onChanged: (bool? value) {
+          context.read<CardsProvider>().toggleShowOnlyMyCards();
           setState(() {
             _showOnlyMyCards = value ?? false;
           });
