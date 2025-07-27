@@ -135,10 +135,9 @@ class _SplashWrapperState extends State<SplashWrapper> {
                     ),
                   ],
                 ),
-                child: Icon(
-                  Icons.camera_alt,
-                  size: 60,
-                  color: theme.colorScheme.primary,
+                child: Image.asset(
+                  'assets/images/icon.png', // Replace with your app logo path
+                  fit: BoxFit.cover,
                 ),
               ),
               const SizedBox(height: 48),

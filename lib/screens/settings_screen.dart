@@ -111,18 +111,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               const SizedBox(height: 20),
 
-              // Logout button
+              // Collection Reset button
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => context.read<CardsProvider>().clearCollection(),
                   icon: Icon(
-                    Icons.logout,
+                    Icons.delete_forever,
                     color: theme.colorScheme.error,
                   ),
                   label: Text(
-                    'Abmelden',
+                    'Sammlung leeren',
                     style: TextStyle(color: theme.colorScheme.error),
                   ),
                   style: ElevatedButton.styleFrom(

@@ -19,6 +19,9 @@ class Card with CardMappable {
   final int cost;
   final String? promoGrouping;
 
+  @MappableField(hook: ColorsHook(), key: 'color')
+  final List<String> colors;
+
   @MappableField(hook: FoilHook())
   final List<String> foilTypes;
 
@@ -92,6 +95,7 @@ class Card with CardMappable {
     required this.externalLinks,
     this.promoGrouping,
     this.foilTypes = const [],
+    this.colors = const [],
     this.language = 'de'
   });
 
@@ -121,6 +125,28 @@ class Ability {
     this.costs,
     this.costsText
   });
+}
+
+class ColorsHook extends MappingHook {
+  const ColorsHook();
+
+  @override
+  Object? beforeEncode(Object? value) {
+    if (value is List<String>) {
+      // Convert the list to a JSON string
+      return value.join('-');
+    }
+    return value;
+  }
+
+  @override
+  Object? beforeDecode(Object? value) {
+    if (value is String) {
+      // Convert the JSON string back to a list
+      return value.split('-').map((e) => e.trim()).toList();
+    }
+    return value;
+  }
 }
 
 class FoilHook extends MappingHook {

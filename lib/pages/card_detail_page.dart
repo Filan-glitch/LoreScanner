@@ -379,7 +379,7 @@ class _CardDetailPageState extends State<CardDetailPage> {
           if (widget.card.foilTypes.contains('None'))
             Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 5),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -416,7 +416,7 @@ class _CardDetailPageState extends State<CardDetailPage> {
           if (widget.card.foilTypes.length > 1 || !widget.card.foilTypes.contains('None'))
             Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 5),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

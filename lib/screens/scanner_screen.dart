@@ -3,7 +3,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Card;
 import 'package:lorescanner/models/card.dart';
-import 'package:lorescanner/provider/tab_notifier.dart';
+import 'package:lorescanner/widgets/tab_notifier.dart';
 import 'package:lorescanner/service/logging.dart';
 import 'package:lorescanner/widgets/found_cards_overview.dart';
 import 'package:lorescanner/widgets/card_template_overlay.dart';

@@ -27,6 +27,7 @@ Future<Database> openDB() async {
           cost INTEGER,
           externalLinks TEXT,
           promoGrouping TEXT,
+          color TEXT,
           foilTypes TEXT,
           language TEXT DEFAULT 'de'
         );

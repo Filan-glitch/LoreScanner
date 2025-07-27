@@ -4,7 +4,6 @@ import 'package:lorescanner/provider/cards_provider.dart';
 import 'package:lorescanner/widgets/collection_item.dart';
 import 'package:provider/provider.dart';
 
-import '../dialogs/collection_filter_dialog.dart';
 import '../dialogs/export_dialog.dart';
 
 class CollectionScreen extends StatelessWidget {
@@ -31,13 +30,7 @@ class CollectionScreen extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Filter
-          showDialog(
-            context: context,
-            builder: (context) => const CollectionFilterDialog(),
-          );
-        },
+        onPressed: () => null,
         child: const Icon(Icons.filter_alt),
         tooltip: 'Sammlung filtern',
       ),
@@ -53,7 +46,8 @@ class CollectionScreen extends StatelessWidget {
         child: CircularProgressIndicator(),
       );
     }
-    
+
+    // Empty collection
     if (collection.entries.isEmpty) {
       return Center(
         child: Padding(
@@ -95,7 +89,8 @@ class CollectionScreen extends StatelessWidget {
         ),
       );
     }
-    
+
+    // Display collection statistics and items
     return Column(
       children: [
         // Statistics header
@@ -149,6 +144,10 @@ class CollectionScreen extends StatelessWidget {
       ],
     );
   }
+
+  /* Widget _buildSearchBar(BuildContext context) {
+    return Container();
+  }*/
 
   Widget _buildStatItem(BuildContext context, String label, String value, IconData icon) {
     final theme = Theme.of(context);
