@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lorescanner/provider/tab_notifier.dart';
+import 'package:lorescanner/widgets/tab_notifier.dart';
 import 'package:lorescanner/screens/collection_screen.dart';
 import 'package:lorescanner/screens/scanner_screen.dart';
 import 'package:lorescanner/screens/settings_screen.dart';

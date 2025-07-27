@@ -5,34 +5,19 @@ import 'package:lorescanner/models/price.dart';
 import 'package:lorescanner/service/database.dart' as db;
 import 'package:lorescanner/service/logging.dart';
 
-import '../constants.dart';
 
 class CardsProvider extends ChangeNotifier {
   List<Card> _cards = [];
   Collection _collection = Collection(entries: []);
   List<Price> _prices = [];
   bool _isLoadingCollection = false;
-  final Map<String, Set<dynamic>> filterMap = {};
 
   List<Card> get cards => _cards;
   Collection get collection => _collection;
   List<Price> get prices => _prices;
   bool get isLoadingCollection => _isLoadingCollection;
 
-  void _extractFilterOptions() {
-    for (final attribute in filterAttributes) {
-      filterMap[attribute] = <dynamic>{};
-    }
-
-    for (final card in cards) {
-      final cardMap = card.toMap();
-      for (final attribute in filterAttributes) {
-        if (cardMap.containsKey(attribute) && cardMap[attribute] != null) {
-          filterMap[attribute]!.add(cardMap[attribute]);
-        }
-      }
-    }
-  }
+  /* Collection based functions */
 
   Future<void> loadCollection() async {
     _isLoadingCollection = true;
@@ -91,18 +76,20 @@ class CardsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setCards(List<Card> newCards) {
-    _cards = newCards;
-    notifyListeners();
-  }
-
   void setCollection(Collection newCollection) {
     _collection = newCollection;
     notifyListeners();
   }
 
-  void setPrices(List<Price> newPrices) {
-    _prices = newPrices;
+  void clearCollection() {
+    _collection = Collection(entries: []);
+    notifyListeners();
+  }
+
+  /* Cards based functions */
+
+  void setCards(List<Card> newCards) {
+    _cards = newCards;
     notifyListeners();
   }
 
@@ -111,12 +98,9 @@ class CardsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> refreshCollection() async {
-    await loadCollection();
-  }
-
-  void clearCollection() {
-    _collection = Collection(entries: []);
+  /* Price based functions */
+  void setPrices(List<Price> newPrices) {
+    _prices = newPrices;
     notifyListeners();
   }
 }
