@@ -22,6 +22,7 @@ abstract final class SettingKeys {
   static const lastPriceFetchAt = 'lastPriceFetchAt';
   static const priceGuideId = 'priceGuideId';
   static const legacyImportDone = 'legacyImportDone';
+  static const themeMode = 'themeMode';
 
   static String lastGeneratedOn(String language) =>
       'lastGeneratedOn.$language';

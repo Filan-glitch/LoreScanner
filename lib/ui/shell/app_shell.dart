@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../collection/collection_page.dart';
 import '../scanner/scanner_page.dart';
+import '../settings/settings_page.dart';
 
 /// Root shell: Material 3 NavigationBar with the three app areas.
 class AppShell extends StatefulWidget {
@@ -22,7 +23,7 @@ class _AppShellState extends State<AppShell> {
         children: [
           ScannerPage(active: _index == 0),
           const CollectionPage(),
-          const _PlaceholderTab(title: 'Einstellungen', icon: Icons.settings),
+          const SettingsPage(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -47,23 +48,3 @@ class _AppShellState extends State<AppShell> {
   }
 }
 
-class _PlaceholderTab extends StatelessWidget {
-  const _PlaceholderTab({required this.title, required this.icon});
-
-  final String title;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 64),
-          const SizedBox(height: 16),
-          Text(title, style: Theme.of(context).textTheme.headlineSmall),
-        ],
-      ),
-    );
-  }
-}

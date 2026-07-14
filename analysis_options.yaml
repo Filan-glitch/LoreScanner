@@ -3,7 +3,6 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   exclude:
     - build/**
-    - lib/_legacy/**
     - "**/*.g.dart"
     - "**/*.mapper.dart"
   errors:

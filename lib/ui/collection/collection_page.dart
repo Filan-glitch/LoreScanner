@@ -1,6 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
+import '../../core/logging.dart';
+import '../../domain/export/csv_exporter.dart';
 import '../../providers.dart';
 import '../widgets/card_grid_tile.dart';
 import 'filter_sheet.dart';
@@ -18,6 +25,11 @@ class CollectionPage extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Sammlung'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            tooltip: 'Sammlung exportieren',
+            onPressed: () => _exportCsv(context, ref),
+          ),
           IconButton(
             icon: Badge(
               isLabelVisible: !filter.isDefault,
@@ -57,6 +69,26 @@ class CollectionPage extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  Future<void> _exportCsv(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final entries = ref.read(allCardsProvider).valueOrNull ?? const [];
+      final csv = toDreambornInk(entries);
+      final path = p.join(
+          (await getApplicationCacheDirectory()).path, 'collection.csv');
+      final file = File(path);
+      await file.writeAsString(csv, flush: true);
+      await SharePlus.instance.share(ShareParams(
+        text: 'Sammlung exportiert',
+        files: [XFile(path, mimeType: 'text/csv')],
+      ));
+    } catch (e, st) {
+      log.warning('CSV export failed', e, st);
+      messenger.showSnackBar(
+          const SnackBar(content: Text('Export fehlgeschlagen')));
+    }
   }
 
   Future<void> _openFilterSheet(BuildContext context, WidgetRef ref) async {

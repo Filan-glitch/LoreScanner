@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
@@ -118,3 +119,31 @@ final matchIndexProvider = Provider<MatchIndex>((ref) {
 
 final scanProvider = NotifierProvider<ScanNotifier, ScanState>(
     () => ScanNotifier((ref) => ref.read(matchIndexProvider)));
+
+/// Theme mode persisted in the settings table.
+class ThemeModeNotifier extends Notifier<ThemeMode> {
+  @override
+  ThemeMode build() {
+    // Load async, default to system until the stored value arrives.
+    ref
+        .watch(databaseProvider)
+        .getSetting(SettingKeys.themeMode)
+        .then((value) {
+      final stored = ThemeMode.values
+          .where((m) => m.name == value)
+          .firstOrNull;
+      if (stored != null) state = stored;
+    });
+    return ThemeMode.system;
+  }
+
+  Future<void> set(ThemeMode mode) async {
+    state = mode;
+    await ref
+        .read(databaseProvider)
+        .setSetting(SettingKeys.themeMode, mode.name);
+  }
+}
+
+final themeModeProvider =
+    NotifierProvider<ThemeModeNotifier, ThemeMode>(ThemeModeNotifier.new);

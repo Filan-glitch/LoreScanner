@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'providers.dart';
 import 'ui/shell/splash_gate.dart';
 
-class LoreScannerApp extends StatelessWidget {
+class LoreScannerApp extends ConsumerWidget {
   const LoreScannerApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
     return MaterialApp(
       title: 'LoreScanner',
       debugShowCheckedModeBanner: false,
@@ -19,7 +22,7 @@ class LoreScannerApp extends StatelessWidget {
           brightness: Brightness.dark,
         ),
       ),
-      themeMode: ThemeMode.system,
+      themeMode: themeMode,
       home: const SplashGate(),
     );
   }
