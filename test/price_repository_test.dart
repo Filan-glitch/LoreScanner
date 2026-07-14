@@ -32,7 +32,7 @@ void main() {
 
   Future<void> seedCards(List<int> cardmarketIds) async {
     var id = 1;
-    await db.cardsDao.replaceLanguage('de', [
+    await db.cardsDao.replaceAll([
       for (final cmId in cardmarketIds)
         CardsCompanion.insert(
           id: Value(id),

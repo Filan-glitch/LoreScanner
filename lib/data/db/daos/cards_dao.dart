@@ -16,14 +16,13 @@ class CardsDao extends DatabaseAccessor<AppDatabase> with _$CardsDaoMixin {
     return row.read(expr) ?? 0;
   }
 
-  /// Replaces all cards of [language] with [entries] in one transaction —
-  /// batch insert, no per-row connection churn.
-  Future<void> replaceLanguage(
-    String language,
-    List<CardsCompanion> entries,
-  ) async {
+  /// Replaces the whole card table with [entries] in one transaction.
+  /// lorcanajson ids are identical across languages, so a language switch
+  /// must wipe everything — delete-by-language would collide on the id PK.
+  /// The collection table is untouched (ids are language-independent).
+  Future<void> replaceAll(List<CardsCompanion> entries) async {
     await transaction(() async {
-      await (delete(cards)..where((c) => c.language.equals(language))).go();
+      await delete(cards).go();
       await batch((b) => b.insertAll(cards, entries));
     });
   }

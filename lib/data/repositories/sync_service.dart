@@ -94,7 +94,7 @@ class SyncService {
       }
       final companions =
           [for (final dto in result.cards) _toCompanion(dto, language)];
-      await _db.cardsDao.replaceLanguage(language, companions);
+      await _db.cardsDao.replaceAll(companions);
       await _db.setSetting(
           SettingKeys.lastGeneratedOn(language), result.metadata.generatedOn);
       await _db.setSettingDateTime(SettingKeys.lastSyncCheckAt, _clock());

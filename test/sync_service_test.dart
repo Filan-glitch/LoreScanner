@@ -146,5 +146,17 @@ void main() {
         .syncIfNeeded(force: true);
     expect(result, SyncResult.synced);
   });
+
+  test('language switch re-syncs same card ids without PK conflict', () async {
+    // lorcanajson ids are identical across languages — the EN sync must
+    // replace the DE rows wholesale, not collide on cards.id (#device).
+    await service(_client()).syncIfNeeded();
+    expect(await db.cardsDao.count(), 3);
+    await db.setSetting(SettingKeys.cardLanguage, 'en');
+    final result = await service(_client()).syncIfNeeded(force: true);
+    expect(result, SyncResult.synced);
+    expect(await db.cardsDao.count(), 3);
+    expect((await db.cardsDao.byId(1))!.language, 'en');
+  });
 }
 
