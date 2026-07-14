@@ -88,6 +88,9 @@ void main() {
       IndexEntry(cardId: 5, searchName: 'elsa schneekoenigin', setCode: '1', number: 20, promoGrouping: 'P1'),
       // English print of card 3 — same id, different language + name.
       IndexEntry(cardId: 3, searchName: 'mighty sorcerer', setCode: '5', number: 42, language: 'en'),
+      // Same name reprinted in a later set — differs only in (set, number).
+      IndexEntry(cardId: 6, searchName: 'micky maus mutiger schneider', setCode: '1', number: 88),
+      IndexEntry(cardId: 7, searchName: 'micky maus mutiger schneider', setCode: '4', number: 90),
     ]);
 
     MatchResult? match(List<String> names, {FooterInfo? footer}) =>
@@ -171,6 +174,27 @@ void main() {
       )!;
       expect(result.cardId, 3);
       expect(result.language, 'en');
+    });
+
+    test('footer number alone resolves same-name reprints across sets', () {
+      // Set code unreadable, name read perfectly: the number-mismatch
+      // penalty must break the 1.0/1.0 tie (regression: clamp erased the
+      // footer boost, ambiguity window blocked every detection).
+      final result = match(
+        ['micky maus mutiger schneider'],
+        footer: const FooterInfo(number: 90, totalSegment: '204'),
+      )!;
+      expect(result.cardId, 7);
+
+      final other = match(
+        ['micky maus mutiger schneider'],
+        footer: const FooterInfo(number: 88, totalSegment: '204'),
+      )!;
+      expect(other.cardId, 6);
+    });
+
+    test('same-name reprints stay ambiguous without any footer', () {
+      expect(match(['micky maus mutiger schneider']), isNull);
     });
 
     test('footer alone without set code stays null when number ambiguous',

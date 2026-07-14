@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/repositories/card_repository.dart';
 import '../../domain/models/card_ext.dart';
 import '../../providers.dart';
 
@@ -24,6 +25,10 @@ class ScanConfirmBar extends ConsumerWidget {
         ref.watch(cardEntryProvider((cardId, language))).valueOrNull;
     if (entry == null) return const SizedBox.shrink();
     final card = entry.card;
+    final prints = ref
+            .watch(sameNamePrintsProvider((cardId, language)))
+            .valueOrNull ??
+        const <CollectionCard>[];
 
     return Material(
       color: theme.colorScheme.surface.withAlpha(242),
@@ -59,10 +64,7 @@ class ScanConfirmBar extends ConsumerWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall),
-                  Text(
-                      '${card.setCode} · ${card.number} · '
-                      '${card.language.toUpperCase()}',
-                      style: theme.textTheme.bodySmall),
+                  _PrintLine(current: entry, prints: prints),
                 ],
               ),
             ),
@@ -95,5 +97,51 @@ class ScanConfirmBar extends ConsumerWidget {
           amountFoil: foil ? 1 : 0,
         );
     ref.read(scanProvider.notifier).confirmed(cardId, language);
+  }
+}
+
+/// Set · number · language line. Same-name reprints exist in other sets:
+/// becomes a dropdown so a footer misread is fixed with one tap instead of
+/// dismiss + rescan.
+class _PrintLine extends ConsumerWidget {
+  const _PrintLine({required this.current, required this.prints});
+
+  final CollectionCard current;
+  final List<CollectionCard> prints;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final card = current.card;
+    final label =
+        '${card.setCode} · ${card.number} · ${card.language.toUpperCase()}';
+    if (prints.length < 2) {
+      return Text(label, style: theme.textTheme.bodySmall);
+    }
+    return PopupMenuButton<(int, String)>(
+      tooltip: 'Anderen Druck wählen',
+      padding: EdgeInsets.zero,
+      onSelected: (key) =>
+          ref.read(scanProvider.notifier).switchPrint(key.$1, key.$2),
+      itemBuilder: (context) => [
+        for (final p in prints)
+          CheckedPopupMenuItem<(int, String)>(
+            value: (p.card.id, p.card.language),
+            checked: p.card.id == card.id,
+            child: Text(
+                'Set ${p.card.setCode} · ${p.card.number} · ${p.card.rarity}'),
+          ),
+      ],
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label,
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: theme.colorScheme.primary)),
+          Icon(Icons.arrow_drop_down,
+              size: 18, color: theme.colorScheme.primary),
+        ],
+      ),
+    );
   }
 }

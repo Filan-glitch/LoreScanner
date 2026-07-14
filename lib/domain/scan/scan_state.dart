@@ -52,6 +52,7 @@ class ScanDetected extends ScanState {
     required this.cardId,
     required this.language,
     required this.score,
+    this.pinned = false,
   });
 
   final int cardId;
@@ -59,6 +60,10 @@ class ScanDetected extends ScanState {
   /// Language of the scanned print — stored with the collection entry.
   final String language;
   final double score;
+
+  /// User picked this print manually (same-name reprint switcher) — later
+  /// frames must not overwrite the choice.
+  final bool pinned;
 }
 
 class ScanFailure extends ScanState {

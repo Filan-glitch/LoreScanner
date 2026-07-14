@@ -363,10 +363,33 @@ class ScanNotifier extends Notifier<ScanState> {
   }
 
   void _onDetected(MatchResult result) {
+    // A manually picked print stays until confirm/dismiss/timeout — the
+    // stream underneath must not swap the user's choice back.
+    final s = state;
+    if (s is ScanDetected && s.pinned) return;
     state = ScanDetected(
       cardId: result.cardId,
       language: result.language,
       score: result.score,
+    );
+    _dismissTimer?.cancel();
+    _dismissTimer = Timer(scanConfirmTimeout, dismiss);
+  }
+
+  /// User picked a different print of the same-named card in the confirm
+  /// bar — swap the detection and restart the confirm window. The print
+  /// shown before goes on cooldown so the next frames don't instantly
+  /// re-detect it.
+  void switchPrint(int cardId, String language) {
+    final s = state;
+    if (s is! ScanDetected) return;
+    if (s.cardId == cardId && s.language == language) return;
+    _controller?.cooldown(s.cardId, s.language);
+    state = ScanDetected(
+      cardId: cardId,
+      language: language,
+      score: s.score,
+      pinned: true,
     );
     _dismissTimer?.cancel();
     _dismissTimer = Timer(scanConfirmTimeout, dismiss);

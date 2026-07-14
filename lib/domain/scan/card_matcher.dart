@@ -100,8 +100,8 @@ double _nameScore(String candidate, String searchName) {
   return 1.0 - distance / maxLen;
 }
 
-/// Footer agreement pins the exact printing (+0.2); disagreement on set or
-/// promo segment is evidence against.
+/// Footer agreement pins the exact printing (+0.2); disagreement on set,
+/// promo segment, or card number is evidence against.
 double _fuseFooter(double score, IndexEntry entry, FooterInfo? footer) {
   if (footer == null) return score;
   final numberMatches = entry.number == footer.number;
@@ -122,6 +122,11 @@ double _fuseFooter(double score, IndexEntry entry, FooterInfo? footer) {
       (numberMatches && !promoMatches)) {
     return score - 0.1;
   }
+  // Same-name reprints differ only in (setCode, number). With an unreadable
+  // set code the +0.2 boost clamps away at a perfect name read, so without
+  // this the reprints tie at 1.0 and the ambiguity window blocks every
+  // detection. Kept milder than the set penalty — OCR misreads digits.
+  if (!numberMatches) return score - 0.05;
   return score;
 }
 

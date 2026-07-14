@@ -5,6 +5,7 @@ import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
+import 'core/card_order.dart';
 import 'data/api/cardmarket_api.dart';
 import 'data/api/lorcana_api.dart';
 import 'data/db/app_database.dart';
@@ -94,6 +95,34 @@ final _cardsByKeyProvider =
 final cardEntryProvider =
     Provider.family<AsyncValue<CollectionCard?>, (int, String)>(
         (ref, key) => ref.watch(_cardsByKeyProvider).whenData((map) => map[key]));
+
+/// All prints sharing one card's searchName + language — same-name reprints
+/// across sets (regular/promo/enchanted). Canonical set order, then number.
+/// Length 1 means the print is unique; the confirm bar shows the switcher
+/// only beyond that.
+final sameNamePrintsProvider =
+    Provider.family<AsyncValue<List<CollectionCard>>, (int, String)>(
+        (ref, key) => ref.watch(allCardsProvider).whenData((entries) {
+          CollectionCard? current;
+          for (final e in entries) {
+            if (e.card.id == key.$1 && e.card.language == key.$2) {
+              current = e;
+              break;
+            }
+          }
+          if (current == null) return const <CollectionCard>[];
+          return [
+            for (final e in entries)
+              if (e.card.language == key.$2 &&
+                  e.card.searchName == current.card.searchName)
+                e,
+          ]..sort((a, b) {
+              final bySet = compareSetCodes(a.card.setCode, b.card.setCode);
+              return bySet != 0
+                  ? bySet
+                  : a.card.number.compareTo(b.card.number);
+            });
+        }));
 
 class CollectionFilterNotifier extends Notifier<CollectionFilter> {
   @override
