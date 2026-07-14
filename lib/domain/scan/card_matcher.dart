@@ -37,7 +37,10 @@ MatchResult? matchCards(MatchInput input) {
     }
   }
 
-  // Footer-only identification when the name read failed.
+  // Footer-only identification. OCR misreads digits, so a footer hit may
+  // only override the name path when no name was read at all or the footer
+  // card's name is at least plausible against a read candidate — otherwise
+  // a mangled "36/204" silently maps to a completely different card.
   final footer = parsed.footer;
   if (footer != null) {
     final entry = index.byFooter(
@@ -46,8 +49,13 @@ MatchResult? matchCards(MatchInput input) {
       totalSegment: footer.totalSegment,
     );
     if (entry != null) {
-      scores.update(entry.cardId, (v) => v > 0.9 ? v : 0.9,
-          ifAbsent: () => 0.9);
+      final namePlausible = parsed.nameCandidates.isEmpty ||
+          parsed.nameCandidates
+              .any((c) => _nameScore(c, entry.searchName) >= 0.5);
+      if (namePlausible) {
+        scores.update(entry.cardId, (v) => v > 0.9 ? v : 0.9,
+            ifAbsent: () => 0.9);
+      }
     }
   }
 

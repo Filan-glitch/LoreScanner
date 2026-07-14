@@ -130,6 +130,20 @@ void main() {
       expect(normal.cardId, 4);
     });
 
+    test('misread footer cannot override a contradicting name read', () {
+      // Name clearly reads one card, footer (OCR digit garbage) points at
+      // an unrelated one — the footer must not win (#device: John Smith
+      // scanned, Tinker Bell added).
+      final result = match(
+        ['john smith undaunted protector'],
+        footer: const FooterInfo(
+            number: 1, totalSegment: '204', language: 'EN', setCode: '1'),
+      );
+      // Footer points at card 1 (arielle) but the read name contradicts it:
+      // no footer-only 0.9 score, and 'john smith…' matches nothing.
+      expect(result, isNull);
+    });
+
     test('footer-only identification without readable name', () {
       final result = match(
         [],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/card_order.dart';
 import '../../domain/models/collection_stats.dart';
 import '../../providers.dart';
 
@@ -111,7 +112,7 @@ class _SetCompletionRow extends StatelessWidget {
     final theme = Theme.of(context);
     final onContainer = theme.colorScheme.onPrimaryContainer;
     final sets = stats.setCompletion.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
+      ..sort((a, b) => compareSetCodes(a.key, b.key));
     return SizedBox(
       height: 52,
       child: ListView.separated(
