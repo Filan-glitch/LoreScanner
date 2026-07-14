@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../collection/collection_page.dart';
+import '../scanner/scanner_page.dart';
 
 /// Root shell: Material 3 NavigationBar with the three app areas.
 class AppShell extends StatefulWidget {
@@ -18,10 +19,10 @@ class _AppShellState extends State<AppShell> {
     return Scaffold(
       body: IndexedStack(
         index: _index,
-        children: const [
-          _PlaceholderTab(title: 'Scanner', icon: Icons.qr_code_scanner),
-          CollectionPage(),
-          _PlaceholderTab(title: 'Einstellungen', icon: Icons.settings),
+        children: [
+          ScannerPage(active: _index == 0),
+          const CollectionPage(),
+          const _PlaceholderTab(title: 'Einstellungen', icon: Icons.settings),
         ],
       ),
       bottomNavigationBar: NavigationBar(

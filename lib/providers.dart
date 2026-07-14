@@ -12,6 +12,9 @@ import 'data/repositories/sync_service.dart';
 import 'domain/models/collection_filter.dart';
 import 'domain/models/collection_stats.dart';
 import 'domain/models/collection_value.dart';
+import 'domain/scan/match_index.dart';
+import 'domain/scan/scan_controller.dart';
+import 'domain/scan/scan_state.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
@@ -106,3 +109,12 @@ final filteredCardsProvider = Provider<AsyncValue<List<CollectionCard>>>((ref) {
 
 final collectionStatsProvider = Provider<AsyncValue<CollectionStats>>((ref) =>
     ref.watch(allCardsProvider).whenData(CollectionStats.fromEntries));
+
+/// Prebuilt scanner match index — rebuilds when the card list changes.
+final matchIndexProvider = Provider<MatchIndex>((ref) {
+  final entries = ref.watch(allCardsProvider).valueOrNull ?? const [];
+  return MatchIndex.fromCards([for (final e in entries) e.card]);
+});
+
+final scanProvider = NotifierProvider<ScanNotifier, ScanState>(
+    () => ScanNotifier((ref) => ref.read(matchIndexProvider)));
