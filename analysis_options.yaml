@@ -1,14 +1,13 @@
-include: package:lints/core.yaml, package:lints/flutter.yaml
+include: package:flutter_lints/flutter.yaml
 
 analyzer:
-  strong-mode:
-    implicit-casts: false
-    implicit-dynamic: false
-  exclude: [build/**, .dart_tool/**, .packages, .flutter-plugins, .flutter-plugins-dependencies, lib/firebase_options.dart]
+  exclude:
+    - build/**
+    - lib/_legacy/**
+    - "**/*.g.dart"
+    - "**/*.mapper.dart"
   errors:
     unused_local_variable: error
-    unused_element: info
-    unused_field: info
 
 linter:
   rules:
@@ -17,8 +16,5 @@ linter:
     - prefer_final_locals
     - avoid_unused_constructor_parameters
     - prefer_void_to_null
-    - avoid_classes_with_only_static_members
-    - prefer_equal_for_default_values
     - prefer_single_quotes
     - use_key_in_widget_constructors
-    - sort_pub_dependencies: false

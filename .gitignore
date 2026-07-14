@@ -49,3 +49,4 @@ flutter_*.tar.xz
 dart*.zip
 flutter/
 dart-sdk/
+graphify-out/
