@@ -235,7 +235,13 @@ class ScanController {
       _trackedCardId = cardId;
       _trackedHits = 1;
       _trackedMisses = 0;
-      _emit(ScanPhase.tracking);
+      // High-certainty reads detect on the very first frame.
+      if (_trackedHits >= _requiredHits(result!.score)) {
+        _resetTracking();
+        onDetected(result);
+      } else {
+        _emit(ScanPhase.tracking);
+      }
       return;
     }
 
