@@ -58,7 +58,7 @@ void main() {
         );
       ''');
       legacy.execute('INSERT INTO collection VALUES (1, 2, 0), (7, 0, 1)');
-      legacy.dispose();
+      legacy.close();
 
       final rows = AppDatabase.importLegacyCollectionFrom(path);
       expect(rows, hasLength(2));

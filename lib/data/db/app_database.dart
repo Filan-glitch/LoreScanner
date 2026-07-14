@@ -121,7 +121,7 @@ class AppDatabase extends _$AppDatabase {
           ),
       ];
     } finally {
-      db.dispose();
+      db.close();
     }
   }
 

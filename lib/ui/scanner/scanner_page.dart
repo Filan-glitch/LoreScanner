@@ -62,7 +62,10 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
   }
 
   void _stop() {
-    ref.read(scanProvider.notifier).stopScanning();
+    // didUpdateWidget/lifecycle callbacks run during build — defer the
+    // provider mutation past the frame.
+    WidgetsBinding.instance.addPostFrameCallback(
+        (_) => ref.read(scanProvider.notifier).stopScanning());
   }
 
   @override

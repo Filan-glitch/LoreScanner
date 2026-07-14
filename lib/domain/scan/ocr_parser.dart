@@ -45,11 +45,11 @@ class ParsedOcr {
   final FooterInfo? footer;
 }
 
-/// The card name sits in the upper band of the card ROI.
-const double _nameBandFraction = 0.45;
-
-/// The footer identifier sits in the bottom band.
-const double _footerBandFraction = 0.22;
+/// The footer identifier sits in the bottom band. Card names sit mid-card
+/// on Lorcana (below the artwork), so everything above the footer band is a
+/// potential name line — the candidate filter and ALL-CAPS priority sort
+/// out ability/flavor noise.
+const double _footerBandFraction = 0.18;
 
 // OCR reads the bullet separator as ·, •, *, ., -, or drops it entirely.
 final RegExp _footerPattern = RegExp(
@@ -76,10 +76,11 @@ FooterInfo? parseFooterLine(String line) {
 /// Splits OCR lines (with image-space bounding boxes) inside [roi] into name
 /// candidates and a footer.
 ParsedOcr parseOcrLines(List<OcrLine> lines, Rect roi) {
-  final nameBandBottom = roi.top + roi.height * _nameBandFraction;
   final footerBandTop = roi.bottom - roi.height * _footerBandFraction;
 
-  final names = <String>[];
+  // (candidate, isAllCaps) — Lorcana prints the card name in capitals, so
+  // ALL-CAPS lines outrank mixed-case ability/flavor text.
+  final names = <(String, bool)>[];
   FooterInfo? footer;
 
   for (final line in lines) {
@@ -91,15 +92,20 @@ ParsedOcr parseOcrLines(List<OcrLine> lines, Rect roi) {
       continue;
     }
 
-    if (center.dy <= nameBandBottom) {
-      final candidate = _nameCandidate(line.text);
-      if (candidate != null) names.add(candidate);
+    final candidate = _nameCandidate(line.text);
+    if (candidate != null) {
+      names.add((candidate, line.text == line.text.toUpperCase()));
     }
   }
 
-  // Wider lines are more likely the big name print — try longest first.
-  names.sort((a, b) => b.length.compareTo(a.length));
-  return ParsedOcr(nameCandidates: names.take(5).toList(), footer: footer);
+  names.sort((a, b) {
+    if (a.$2 != b.$2) return a.$2 ? -1 : 1;
+    return b.$1.length.compareTo(a.$1.length);
+  });
+  return ParsedOcr(
+    nameCandidates: [for (final n in names.take(5)) n.$1],
+    footer: footer,
+  );
 }
 
 String? _nameCandidate(String raw) {

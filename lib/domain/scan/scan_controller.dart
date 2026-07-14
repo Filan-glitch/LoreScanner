@@ -36,6 +36,7 @@ class ScanController {
       TextRecognizer(script: TextRecognitionScript.latin);
 
   bool _busy = false;
+  int _frameCount = 0;
   DateTime _lastFrameAt = DateTime.fromMillisecondsSinceEpoch(0);
   int? _trackedCardId;
   int _trackedHits = 0;
@@ -105,6 +106,11 @@ class ScanController {
 
   Future<void> _onFrame(CameraImage image) async {
     final now = DateTime.now();
+    if (kDebugMode && ++_frameCount % 30 == 1) {
+      log.info('SCAN heartbeat frame=$_frameCount busy=$_busy '
+          'widgetSize=$widgetSize format=${image.format.group} '
+          'planes=${image.planes.length} ${image.width}x${image.height}');
+    }
     if (_busy || now.difference(_lastFrameAt) < scanFrameInterval) return;
     if (widgetSize == Size.zero) return;
     _busy = true;
@@ -136,22 +142,29 @@ class ScanController {
         RoiMapper(widgetSize: widgetSize, uprightImageSize: uprightSize);
     final imageRoi = mapper.widgetToImage(cardRoi(widgetSize));
 
-    // ML Kit returns boxes in sensor coordinates; rotate them upright so
-    // they share a frame with the ROI. Verified on-device in tuning pass.
+    // ML Kit applies the rotation metadata itself: boxes arrive already in
+    // the upright frame (verified on Pixel 9a — y exceeds sensor height).
     final lines = <OcrLine>[
       for (final block in recognized.blocks)
         for (final line in block.lines)
-          OcrLine(
-            line.text,
-            RoiMapper.uprightRect(line.boundingBox, sensorSize, rotationDegrees),
-          ),
+          OcrLine(line.text, line.boundingBox),
     ];
 
     final parsed = parseOcrLines(lines, imageRoi);
+    if (kDebugMode && lines.isNotEmpty) {
+      log.info('SCAN raw=${lines.length} lines, roi=$imageRoi, '
+          'inRoi names=${parsed.nameCandidates}, footer=${parsed.footer}, '
+          'sample=${lines.take(3).map((l) => '"${l.text}"@${l.boundingBox}').join(' | ')}');
+    }
     if (parsed.nameCandidates.isEmpty && parsed.footer == null) return null;
 
-    return compute(
+    final result = await compute(
         matchCards, MatchInput(parsed: parsed, index: _indexProvider()));
+    if (kDebugMode && result != null) {
+      log.info('SCAN match card=${result.cardId} '
+          'score=${result.score.toStringAsFixed(3)}');
+    }
+    return result;
   }
 
   void _track(MatchResult? result) {
@@ -260,8 +273,10 @@ class ScanNotifier extends Notifier<ScanState> {
     _dismissTimer?.cancel();
     final controller = _controller;
     _controller = null;
-    if (controller != null) await controller.dispose();
+    // State first: a rebuild between dispose start and state change would
+    // otherwise render CameraPreview on a disposed controller.
     state = const ScanIdle();
+    if (controller != null) await controller.dispose();
   }
 
   void _onDetected(MatchResult result) {

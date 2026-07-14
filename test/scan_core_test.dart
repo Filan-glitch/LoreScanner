@@ -50,19 +50,21 @@ void main() {
   group('parseOcrLines', () {
     const roi = Rect.fromLTWH(0, 0, 300, 420);
 
-    test('splits name band and footer band, ignores outside-ROI', () {
+    test('ALL-CAPS name ranks first, footer band split, outside-ROI ignored',
+        () {
       final parsed = parseOcrLines([
-        const OcrLine('ARIELLE', Rect.fromLTWH(60, 30, 180, 24)),
-        const OcrLine('Singende Sirene', Rect.fromLTWH(60, 60, 180, 20)),
-        const OcrLine('Sturmesschwingen kostet 1', // ability text, mid-card
-            Rect.fromLTWH(40, 250, 220, 16)),
+        // Lorcana names sit mid-card — must be picked up there.
+        const OcrLine('ARIELLE', Rect.fromLTWH(60, 200, 180, 24)),
+        const OcrLine('Singende Sirene', Rect.fromLTWH(60, 230, 180, 20)),
+        const OcrLine('Sturmesschwingen kostet 1', // ability text
+            Rect.fromLTWH(40, 290, 220, 16)),
         const OcrLine('12/204 • DE • 2', Rect.fromLTWH(20, 395, 120, 14)),
         const OcrLine('Outside', Rect.fromLTWH(500, 30, 80, 20)),
       ], roi);
 
-      expect(parsed.nameCandidates, contains('arielle'));
+      // ALL-CAPS printed name outranks mixed-case lines.
+      expect(parsed.nameCandidates.first, 'arielle');
       expect(parsed.nameCandidates, contains('singende sirene'));
-      expect(parsed.nameCandidates.join(' '), isNot(contains('sturm')));
       expect(parsed.footer!.number, 12);
       expect(parsed.nameCandidates.join(' '), isNot(contains('outside')));
     });
