@@ -98,7 +98,7 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
                       tracking: scanState is ScanStreaming &&
                           scanState.trackingCardId != null,
                     ),
-                    if (kDebugMode)
+                    if (!kReleaseMode)
                       Positioned(
                         left: 16,
                         right: 16,

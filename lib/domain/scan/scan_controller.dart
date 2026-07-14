@@ -203,7 +203,7 @@ class ScanController {
     metrics.add(FrameTiming(
         inputMs: inputMs, ocrMs: ocrMs, parseMs: parseMs, matchMs: matchMs));
     _logMetricsPeriodically();
-    if (kDebugMode && result != null) {
+    if (!kReleaseMode && result != null) {
       log.info('SCAN match card=${result.cardId} '
           'score=${result.score.toStringAsFixed(3)}');
     }
@@ -211,7 +211,7 @@ class ScanController {
   }
 
   void _logMetricsPeriodically() {
-    if (kDebugMode && ++_frameCount % 20 == 0) {
+    if (!kReleaseMode && ++_frameCount % 20 == 0) {
       log.info('SCAN perf ${metrics.summary()}');
     }
   }

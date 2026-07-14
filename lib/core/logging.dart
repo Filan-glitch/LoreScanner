@@ -10,7 +10,7 @@ void setupLogging() {
   Logger.root.onRecord.listen((record) {
     // debugPrint reaches the `flutter run` console; developer.log only
     // shows up in DevTools.
-    if (kDebugMode) {
+    if (!kReleaseMode) {
       debugPrint('[${record.level.name}] ${record.message}'
           '${record.error != null ? ' | ${record.error}' : ''}');
     }
