@@ -63,6 +63,11 @@ class AppDatabase extends _$AppDatabase {
   Future<void> setSetting(String key, String value) => into(settings)
       .insertOnConflictUpdate(SettingsCompanion.insert(key: key, value: value));
 
+  Stream<String?> watchSetting(String key) =>
+      (select(settings)..where((s) => s.key.equals(key)))
+          .watchSingleOrNull()
+          .map((row) => row?.value);
+
   Future<DateTime?> getSettingDateTime(String key) async {
     final raw = await getSetting(key);
     final ms = raw == null ? null : int.tryParse(raw);
