@@ -3,6 +3,21 @@ sealed class ScanState {
   const ScanState();
 }
 
+/// What the pipeline is doing right now — drives the live status line.
+enum ScanPhase {
+  /// No usable text in the ROI yet.
+  searching,
+
+  /// OCR found text, extracting name/footer.
+  reading,
+
+  /// Candidates scored against the card index.
+  matching,
+
+  /// A candidate card is accumulating stability hits.
+  tracking,
+}
+
 /// Camera not started (tab inactive, permissions pending, disposed).
 class ScanIdle extends ScanState {
   const ScanIdle();
@@ -13,12 +28,19 @@ class ScanStarting extends ScanState {
   const ScanStarting();
 }
 
-/// Live stream running, looking for cards. [trackingCardId] is set while a
-/// candidate accumulates stability hits.
+/// Live stream running.
 class ScanStreaming extends ScanState {
-  const ScanStreaming({this.trackingCardId});
+  const ScanStreaming({
+    this.phase = ScanPhase.searching,
+    this.trackingCardId,
+    this.trackingHits = 0,
+    this.requiredHits = 2,
+  });
 
+  final ScanPhase phase;
   final int? trackingCardId;
+  final int trackingHits;
+  final int requiredHits;
 }
 
 /// A card cleared threshold + stability — quick-confirm bar shows. The

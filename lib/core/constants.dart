@@ -19,7 +19,7 @@ const Duration priceRefreshInterval = Duration(hours: 24);
 // --- Scan pipeline ---
 const double matchConfidenceThreshold = 0.7;
 const double matchAmbiguityWindow = 0.05;
-const Duration scanFrameInterval = Duration(milliseconds: 400);
+const Duration scanFrameInterval = Duration(milliseconds: 250);
 const int scanStabilityHits = 2;
 const Duration scanConfirmTimeout = Duration(seconds: 4);
 const Duration scanCardCooldown = Duration(seconds: 3);

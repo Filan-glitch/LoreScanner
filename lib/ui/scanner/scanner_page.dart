@@ -1,4 +1,5 @@
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -97,6 +98,13 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
                       tracking: scanState is ScanStreaming &&
                           scanState.trackingCardId != null,
                     ),
+                    if (kDebugMode)
+                      Positioned(
+                        left: 16,
+                        right: 16,
+                        top: MediaQuery.of(context).padding.top + 8,
+                        child: _PerfPanel(),
+                      ),
                     if (scanState is ScanDetected)
                       Positioned(
                         left: 16,
@@ -109,18 +117,129 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
                         left: 16,
                         right: 16,
                         bottom: 24,
-                        child: Text(
-                          'Karte in den Rahmen halten',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(color: Colors.white),
-                        ),
+                        child: _StatusLine(state: scanState),
                       ),
                   ],
                 );
               }),
+      },
+    );
+  }
+}
+
+/// Live pipeline feedback under the frame: what the scanner is doing and
+/// how close a tracked card is to detection.
+class _StatusLine extends ConsumerWidget {
+  const _StatusLine({required this.state});
+
+  final ScanState state;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final streaming = state is ScanStreaming ? state as ScanStreaming : null;
+    final phase = streaming?.phase ?? ScanPhase.searching;
+
+    final (label, showSpinner) = switch (phase) {
+      ScanPhase.searching => ('Karte in den Rahmen halten', false),
+      ScanPhase.reading => ('Text wird gelesen…', true),
+      ScanPhase.matching => ('Karte wird gesucht…', true),
+      ScanPhase.tracking => ('Karte erkannt – kurz still halten', true),
+    };
+
+    final trackedName = streaming?.trackingCardId == null
+        ? null
+        : ref
+            .watch(allCardsProvider)
+            .valueOrNull
+            ?.where((e) => e.card.id == streaming!.trackingCardId)
+            .firstOrNull
+            ?.card
+            .fullName;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.black.withAlpha(153),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (showSpinner) ...[
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
+                ),
+                const SizedBox(width: 10),
+              ],
+              Flexible(
+                child: Text(
+                  phase == ScanPhase.tracking && trackedName != null
+                      ? trackedName
+                      : label,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          if (phase == ScanPhase.tracking && streaming != null) ...[
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: streaming.trackingHits / streaming.requiredHits,
+                minHeight: 6,
+                backgroundColor: Colors.white24,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Debug-only: rolling per-stage pipeline timings.
+class _PerfPanel extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<_PerfPanel> createState() => _PerfPanelState();
+}
+
+class _PerfPanelState extends ConsumerState<_PerfPanel> {
+  late final Stream<void> _tick =
+      Stream.periodic(const Duration(seconds: 1));
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<void>(
+      stream: _tick,
+      builder: (context, _) {
+        final metrics = ref.read(scanProvider.notifier).controller?.metrics;
+        if (metrics == null || metrics.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.black.withAlpha(140),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            metrics.summary(),
+            style: const TextStyle(
+                color: Colors.greenAccent, fontSize: 11, fontFamily: 'monospace'),
+          ),
+        );
       },
     );
   }

@@ -13,7 +13,21 @@ import 'card_matcher.dart';
 import 'match_index.dart';
 import 'ocr_parser.dart';
 import 'roi_mapper.dart';
+import 'scan_metrics.dart';
 import 'scan_state.dart';
+
+/// Live progress report from one processed frame.
+class ScanProgress {
+  const ScanProgress({
+    required this.phase,
+    this.trackingCardId,
+    this.trackingHits = 0,
+  });
+
+  final ScanPhase phase;
+  final int? trackingCardId;
+  final int trackingHits;
+}
 
 /// Drives the continuous scan pipeline:
 /// camera stream → ML Kit (native thread) → parse+match (compute isolate)
@@ -25,15 +39,20 @@ import 'scan_state.dart';
 class ScanController {
   ScanController({
     required this.onDetected,
+    required this.onProgress,
     required this._indexProvider,
   });
 
   final void Function(MatchResult result) onDetected;
+  final void Function(ScanProgress progress) onProgress;
   final MatchIndex Function() _indexProvider;
 
   CameraController? camera;
   final TextRecognizer _recognizer =
       TextRecognizer(script: TextRecognitionScript.latin);
+
+  /// Rolling per-stage timings for tuning; read by the debug overlay.
+  final ScanMetrics metrics = ScanMetrics();
 
   bool _busy = false;
   int _frameCount = 0;
@@ -41,6 +60,7 @@ class ScanController {
   int? _trackedCardId;
   int _trackedHits = 0;
   int _trackedMisses = 0;
+  ScanPhase _lastPhase = ScanPhase.searching;
   final Map<int, DateTime> _cooldowns = {};
 
   /// Preview widget size, fed from the page's LayoutBuilder — drives the
@@ -104,13 +124,20 @@ class ScanController {
     _resetTracking();
   }
 
+  void _emit(ScanPhase phase) {
+    // Only notify on actual change to keep rebuilds sparse — tracking
+    // updates always go through (hit count changes).
+    if (phase == _lastPhase && phase != ScanPhase.tracking) return;
+    _lastPhase = phase;
+    onProgress(ScanProgress(
+      phase: phase,
+      trackingCardId: _trackedCardId,
+      trackingHits: _trackedHits,
+    ));
+  }
+
   Future<void> _onFrame(CameraImage image) async {
     final now = DateTime.now();
-    if (kDebugMode && ++_frameCount % 30 == 1) {
-      log.info('SCAN heartbeat frame=$_frameCount busy=$_busy '
-          'widgetSize=$widgetSize format=${image.format.group} '
-          'planes=${image.planes.length} ${image.width}x${image.height}');
-    }
     if (_busy || now.difference(_lastFrameAt) < scanFrameInterval) return;
     if (widgetSize == Size.zero) return;
     _busy = true;
@@ -129,42 +156,61 @@ class ScanController {
     final controller = camera;
     if (controller == null) return null;
 
+    final stopwatch = Stopwatch()..start();
     final rotationDegrees = controller.description.sensorOrientation;
     final inputImage = _toInputImage(image, rotationDegrees);
     if (inputImage == null) return null;
+    final inputMs = stopwatch.elapsedMilliseconds;
 
+    stopwatch.reset();
     final recognized = await _recognizer.processImage(inputImage);
+    final ocrMs = stopwatch.elapsedMilliseconds;
 
-    final sensorSize =
-        Size(image.width.toDouble(), image.height.toDouble());
+    stopwatch.reset();
+    final sensorSize = Size(image.width.toDouble(), image.height.toDouble());
     final uprightSize = RoiMapper.uprightSize(sensorSize, rotationDegrees);
     final mapper =
         RoiMapper(widgetSize: widgetSize, uprightImageSize: uprightSize);
     final imageRoi = mapper.widgetToImage(cardRoi(widgetSize));
 
     // ML Kit applies the rotation metadata itself: boxes arrive already in
-    // the upright frame (verified on Pixel 9a — y exceeds sensor height).
+    // the upright frame (verified on Pixel 9a).
     final lines = <OcrLine>[
       for (final block in recognized.blocks)
         for (final line in block.lines)
           OcrLine(line.text, line.boundingBox),
     ];
-
     final parsed = parseOcrLines(lines, imageRoi);
-    if (kDebugMode && lines.isNotEmpty) {
-      log.info('SCAN raw=${lines.length} lines, roi=$imageRoi, '
-          'inRoi names=${parsed.nameCandidates}, footer=${parsed.footer}, '
-          'sample=${lines.take(3).map((l) => '"${l.text}"@${l.boundingBox}').join(' | ')}');
-    }
-    if (parsed.nameCandidates.isEmpty && parsed.footer == null) return null;
+    final parseMs = stopwatch.elapsedMilliseconds;
 
+    if (parsed.nameCandidates.isEmpty && parsed.footer == null) {
+      metrics.add(FrameTiming(
+          inputMs: inputMs, ocrMs: ocrMs, parseMs: parseMs, matchMs: 0));
+      _logMetricsPeriodically();
+      _emit(lines.isEmpty ? ScanPhase.searching : ScanPhase.reading);
+      return null;
+    }
+
+    _emit(ScanPhase.matching);
+    stopwatch.reset();
     final result = await compute(
         matchCards, MatchInput(parsed: parsed, index: _indexProvider()));
+    final matchMs = stopwatch.elapsedMilliseconds;
+
+    metrics.add(FrameTiming(
+        inputMs: inputMs, ocrMs: ocrMs, parseMs: parseMs, matchMs: matchMs));
+    _logMetricsPeriodically();
     if (kDebugMode && result != null) {
       log.info('SCAN match card=${result.cardId} '
           'score=${result.score.toStringAsFixed(3)}');
     }
     return result;
+  }
+
+  void _logMetricsPeriodically() {
+    if (kDebugMode && ++_frameCount % 20 == 0) {
+      log.info('SCAN perf ${metrics.summary()}');
+    }
   }
 
   void _track(MatchResult? result) {
@@ -177,20 +223,27 @@ class ScanController {
     if (cardId == null || cardId != _trackedCardId) {
       if (cardId == null) {
         // Tolerate brief dropouts before giving up on the tracked card.
-        if (_trackedCardId != null && ++_trackedMisses >= 2) _resetTracking();
+        if (_trackedCardId != null && ++_trackedMisses >= 2) {
+          _resetTracking();
+          _emit(ScanPhase.searching);
+        }
         return;
       }
       _trackedCardId = cardId;
       _trackedHits = 1;
       _trackedMisses = 0;
+      _emit(ScanPhase.tracking);
       return;
     }
 
     _trackedMisses = 0;
-    if (++_trackedHits >= scanStabilityHits) {
+    _trackedHits++;
+    if (_trackedHits >= scanStabilityHits) {
       final detected = result!;
       _resetTracking();
       onDetected(detected);
+    } else {
+      _emit(ScanPhase.tracking);
     }
   }
 
@@ -250,6 +303,7 @@ class ScanNotifier extends Notifier<ScanState> {
     state = const ScanStarting();
     final controller = ScanController(
       onDetected: _onDetected,
+      onProgress: _onProgress,
       indexProvider: () => _indexProvider(ref),
     );
     _controller = controller;
@@ -277,6 +331,17 @@ class ScanNotifier extends Notifier<ScanState> {
     // otherwise render CameraPreview on a disposed controller.
     state = const ScanIdle();
     if (controller != null) await controller.dispose();
+  }
+
+  void _onProgress(ScanProgress progress) {
+    // Detected state owns the UI until confirmed/dismissed.
+    if (state is! ScanStreaming) return;
+    state = ScanStreaming(
+      phase: progress.phase,
+      trackingCardId: progress.trackingCardId,
+      trackingHits: progress.trackingHits,
+      requiredHits: scanStabilityHits,
+    );
   }
 
   void _onDetected(MatchResult result) {
