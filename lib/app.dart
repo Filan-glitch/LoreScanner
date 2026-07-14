@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'ui/shell/app_shell.dart';
+import 'ui/shell/splash_gate.dart';
 
 class LoreScannerApp extends StatelessWidget {
   const LoreScannerApp({super.key});
@@ -20,7 +20,7 @@ class LoreScannerApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.system,
-      home: const AppShell(),
+      home: const SplashGate(),
     );
   }
 }
