@@ -29,6 +29,8 @@ class StatsSection extends ConsumerWidget {
               _divider(theme),
               _stat(context, 'Gesamt', '${stats.totalCopies}',
                   Icons.inventory_2),
+              _divider(theme),
+              _ValueStat(),
             ],
           ),
           if (stats.setCompletion.isNotEmpty) ...[
@@ -65,6 +67,36 @@ class StatsSection extends ConsumerWidget {
               ?.copyWith(color: onContainer.withAlpha(204)),
         ),
       ],
+    );
+  }
+}
+
+class _ValueStat extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final onContainer = theme.colorScheme.onPrimaryContainer;
+    final value = ref.watch(collectionValueProvider).valueOrNull;
+    return Tooltip(
+      message: value == null || value.ownedCards == 0
+          ? 'Noch keine Preise geladen'
+          : 'Wert basiert auf ${value.pricedCards} von ${value.ownedCards} Karten',
+      child: Column(
+        children: [
+          Icon(Icons.euro, color: onContainer, size: 24),
+          const SizedBox(height: 4),
+          Text(
+            value == null ? '—' : value.total.toStringAsFixed(2),
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold, color: onContainer),
+          ),
+          Text(
+            'Wert',
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: onContainer.withAlpha(204)),
+          ),
+        ],
+      ),
     );
   }
 }

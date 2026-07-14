@@ -17,6 +17,8 @@ class PricesDao extends DatabaseAccessor<AppDatabase> with _$PricesDaoMixin {
       (select(prices)..where((p) => p.cardmarketId.equals(id)))
           .watchSingleOrNull();
 
+  Stream<List<Price>> watchAll() => select(prices).watch();
+
   /// Replaces the full price cache in one transaction.
   Future<void> replaceAll(List<PricesCompanion> entries) async {
     await transaction(() async {

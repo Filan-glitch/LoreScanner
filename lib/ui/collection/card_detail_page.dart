@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/db/app_database.dart';
 import '../../data/repositories/card_repository.dart';
 import '../../domain/models/card_ext.dart';
 import '../../providers.dart';
@@ -172,15 +173,76 @@ class _CollectionEdit extends ConsumerWidget {
   }
 }
 
-/// Prices arrive in Phase 3 — placeholder keeps layout stable.
-class _PricesSection extends StatelessWidget {
+class _PricesSection extends ConsumerWidget {
   const _PricesSection({required this.entry});
 
-  // ignore: unused_field
   final CollectionCard entry;
 
   @override
-  Widget build(BuildContext context) => const SizedBox.shrink();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final cmId = entry.card.cardmarketId;
+    final price =
+        cmId == null ? null : ref.watch(pricesMapProvider).valueOrNull?[cmId];
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Cardmarket-Preise', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 8),
+          if (price == null)
+            const Text('Kein Preis verfügbar')
+          else ...[
+            for (final row in _rows(price))
+              if (row.value != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
+                    children: [
+                      Expanded(child: Text(row.key)),
+                      Text('${row.value!.toStringAsFixed(2)} €',
+                          style: theme.textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+            const SizedBox(height: 8),
+            Text(
+              'Stand: ${_formatDate(price.fetchedAt)}',
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  List<MapEntry<String, double?>> _rows(Price price) => [
+        MapEntry('Durchschnitt', price.avg),
+        MapEntry('Niedrigster', price.low),
+        MapEntry('Trend', price.trend),
+        MapEntry('Durchschnitt 1 Tag', price.avg1),
+        MapEntry('Durchschnitt 7 Tage', price.avg7),
+        MapEntry('Durchschnitt 30 Tage', price.avg30),
+        MapEntry('Durchschnitt (Foil)', price.avgFoil),
+        MapEntry('Niedrigster (Foil)', price.lowFoil),
+        MapEntry('Trend (Foil)', price.trendFoil),
+        MapEntry('Durchschnitt 1 Tag (Foil)', price.avg1Foil),
+        MapEntry('Durchschnitt 7 Tage (Foil)', price.avg7Foil),
+        MapEntry('Durchschnitt 30 Tage (Foil)', price.avg30Foil),
+      ];
+
+  static String _formatDate(int ms) {
+    final date = DateTime.fromMillisecondsSinceEpoch(ms);
+    return '${date.day}.${date.month}.${date.year}';
+  }
 }
 
 class _AttributesSection extends StatelessWidget {

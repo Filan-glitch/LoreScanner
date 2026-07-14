@@ -1,12 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
+import 'data/api/cardmarket_api.dart';
 import 'data/api/lorcana_api.dart';
 import 'data/db/app_database.dart';
 import 'data/repositories/card_repository.dart';
+import 'data/repositories/price_repository.dart';
 import 'data/repositories/sync_service.dart';
 import 'domain/models/collection_filter.dart';
 import 'domain/models/collection_stats.dart';
+import 'domain/models/collection_value.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
@@ -32,7 +37,35 @@ final syncServiceProvider = Provider<SyncService>((ref) =>
 final startupProvider = FutureProvider<SyncResult>((ref) async {
   final db = ref.watch(databaseProvider);
   await db.importLegacyCollectionIfNeeded();
-  return ref.watch(syncServiceProvider).syncIfNeeded();
+  final result = await ref.watch(syncServiceProvider).syncIfNeeded();
+  // Prices refresh in the background after sync — never blocks startup.
+  unawaited(ref.read(priceRepositoryProvider).refreshIfStale());
+  return result;
+});
+
+final cardmarketApiProvider = Provider<CardmarketApi>(
+    (ref) => CardmarketApi(ref.watch(httpClientProvider)));
+
+final priceRepositoryProvider = Provider<PriceRepository>((ref) =>
+    PriceRepository(
+        ref.watch(databaseProvider), ref.watch(cardmarketApiProvider)));
+
+/// All cached prices keyed by cardmarket id.
+final pricesMapProvider = StreamProvider<Map<int, Price>>((ref) => ref
+    .watch(databaseProvider)
+    .pricesDao
+    .watchAll()
+    .map((rows) => {for (final p in rows) p.cardmarketId: p}));
+
+/// Total collection value + coverage, reactive to prices and collection.
+final collectionValueProvider = Provider<AsyncValue<CollectionValue>>((ref) {
+  final prices = ref.watch(pricesMapProvider);
+  final cards = ref.watch(allCardsProvider);
+  if (prices.hasValue && cards.hasValue) {
+    return AsyncValue.data(
+        CollectionValue.compute(cards.requireValue, prices.requireValue));
+  }
+  return const AsyncValue.loading();
 });
 
 final cardRepositoryProvider =
