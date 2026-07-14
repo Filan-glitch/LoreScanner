@@ -18,6 +18,10 @@ const Duration priceRefreshInterval = Duration(hours: 24);
 
 // --- Scan pipeline ---
 const double matchConfidenceThreshold = 0.7;
+
+/// Matches at or above this score confirm after a single frame instead of
+/// the full stability window.
+const double scanInstantConfidence = 0.95;
 const double matchAmbiguityWindow = 0.05;
 const Duration scanFrameInterval = Duration(milliseconds: 250);
 const int scanStabilityHits = 2;

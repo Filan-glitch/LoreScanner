@@ -75,6 +75,9 @@ class ScanController {
       (c) => c.lensDirection == CameraLensDirection.back,
       orElse: () => cameras.first,
     );
+    // Resolution does not move OCR time on-device (480p 629ms vs 720p
+    // 643ms — ML Kit cost is fixed, not pixel-bound), so keep high for
+    // footer legibility.
     final controller = CameraController(
       back,
       ResolutionPreset.high,
@@ -238,14 +241,19 @@ class ScanController {
 
     _trackedMisses = 0;
     _trackedHits++;
-    if (_trackedHits >= scanStabilityHits) {
-      final detected = result!;
+    if (_trackedHits >= _requiredHits(result!.score)) {
       _resetTracking();
-      onDetected(detected);
+      onDetected(result);
     } else {
       _emit(ScanPhase.tracking);
     }
   }
+
+  /// High-certainty matches (exact name / footer-pinned, ≥0.95) confirm on
+  /// the first repeat; only fuzzy matches need the full stability window.
+  /// At ~650ms per frame this halves time-to-detection for clean reads.
+  static int _requiredHits(double score) =>
+      score >= scanInstantConfidence ? 1 : scanStabilityHits;
 
   InputImage? _toInputImage(CameraImage image, int rotationDegrees) {
     final rotation = InputImageRotationValue.fromRawValue(rotationDegrees);
