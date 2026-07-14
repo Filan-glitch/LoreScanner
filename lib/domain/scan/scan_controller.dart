@@ -25,8 +25,8 @@ import 'scan_state.dart';
 class ScanController {
   ScanController({
     required this.onDetected,
-    required MatchIndex Function() indexProvider,
-  }) : _indexProvider = indexProvider;
+    required this._indexProvider,
+  });
 
   final void Function(MatchResult result) onDetected;
   final MatchIndex Function() _indexProvider;
