@@ -56,18 +56,18 @@ class CardDto with CardDtoMappable {
     this.externalLinks = const {},
   });
 
-  /// Primary ink: `color` when set, else first of `colors` (dual-ink cards
-  /// since set 5 leave `color` empty).
+  /// Primary ink: `color` when set, else first of `colors`. Dual-ink cards
+  /// carry hyphen-joined values ("Bernstein-Amethyst") — first part wins.
   String get primaryInk {
-    if (color != null && color!.isNotEmpty) return color!;
+    if (color != null && color!.isNotEmpty) return color!.split('-').first;
     if (colors != null && colors!.isNotEmpty) return colors!.first;
     return '';
   }
 
-  /// Full ink list for filter matching.
+  /// Full ink list for filter matching — splits hyphen-joined duals.
   List<String> get inks {
     if (colors != null && colors!.isNotEmpty) return colors!;
-    if (color != null && color!.isNotEmpty) return [color!];
+    if (color != null && color!.isNotEmpty) return color!.split('-');
     return const [];
   }
 

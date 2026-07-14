@@ -61,7 +61,11 @@ class CollectionPage extends ConsumerWidget {
                     childAspectRatio: 0.7,
                   ),
                   itemCount: cards.length,
-                  itemBuilder: (context, i) => CardGridTile(entry: cards[i]),
+                  itemBuilder: (context, i) => CardGridTile(
+                    key: ValueKey(
+                        '${cards[i].card.id}_${cards[i].card.language}'),
+                    entry: cards[i],
+                  ),
                 ),
               ),
             ],
@@ -93,9 +97,8 @@ class CollectionPage extends ConsumerWidget {
 
   Future<void> _openFilterSheet(BuildContext context, WidgetRef ref) async {
     final repo = ref.read(cardRepositoryProvider);
-    final language = ref.read(cardLanguageProvider).valueOrNull ?? 'de';
-    final sets = await repo.setCodes(language);
-    final rarities = await repo.rarities(language);
+    final sets = await repo.setCodes();
+    final rarities = await repo.rarities();
     if (!context.mounted) return;
     await showModalBottomSheet(
       context: context,

@@ -15,7 +15,7 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, Card> {
     aliasedName,
     false,
     type: DriftSqlType.int,
-    requiredDuringInsert: false,
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _setCodeMeta = const VerificationMeta(
     'setCode',
@@ -249,6 +249,8 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, Card> {
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
     }
     if (data.containsKey('set_code')) {
       context.handle(
@@ -394,100 +396,83 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, Card> {
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {id};
+  Set<GeneratedColumn> get $primaryKey => {id, language};
   @override
   Card map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Card(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}id'],
-          )!,
-      setCode:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}set_code'],
-          )!,
-      number:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}number'],
-          )!,
-      language:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}language'],
-          )!,
-      simpleName:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}simple_name'],
-          )!,
-      fullName:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}full_name'],
-          )!,
-      searchName:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}search_name'],
-          )!,
-      rarity:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}rarity'],
-          )!,
-      type:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}type'],
-          )!,
-      story:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}story'],
-          )!,
-      ink:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}ink'],
-          )!,
-      inksJson:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}inks_json'],
-          )!,
-      cost:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}cost'],
-          )!,
-      inkwell:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}inkwell'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      setCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}set_code'],
+      )!,
+      number: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}number'],
+      )!,
+      language: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}language'],
+      )!,
+      simpleName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}simple_name'],
+      )!,
+      fullName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}full_name'],
+      )!,
+      searchName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}search_name'],
+      )!,
+      rarity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rarity'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      story: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}story'],
+      )!,
+      ink: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ink'],
+      )!,
+      inksJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}inks_json'],
+      )!,
+      cost: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cost'],
+      )!,
+      inkwell: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}inkwell'],
+      )!,
       promoGrouping: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}promo_grouping'],
       ),
-      foilTypesJson:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}foil_types_json'],
-          )!,
-      imagesJson:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}images_json'],
-          )!,
-      externalLinksJson:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}external_links_json'],
-          )!,
+      foilTypesJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}foil_types_json'],
+      )!,
+      imagesJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}images_json'],
+      )!,
+      externalLinksJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}external_links_json'],
+      )!,
       cardmarketId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}cardmarket_id'],
@@ -594,17 +579,15 @@ class Card extends DataClass implements Insertable<Card> {
       inksJson: Value(inksJson),
       cost: Value(cost),
       inkwell: Value(inkwell),
-      promoGrouping:
-          promoGrouping == null && nullToAbsent
-              ? const Value.absent()
-              : Value(promoGrouping),
+      promoGrouping: promoGrouping == null && nullToAbsent
+          ? const Value.absent()
+          : Value(promoGrouping),
       foilTypesJson: Value(foilTypesJson),
       imagesJson: Value(imagesJson),
       externalLinksJson: Value(externalLinksJson),
-      cardmarketId:
-          cardmarketId == null && nullToAbsent
-              ? const Value.absent()
-              : Value(cardmarketId),
+      cardmarketId: cardmarketId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cardmarketId),
     );
   }
 
@@ -696,8 +679,9 @@ class Card extends DataClass implements Insertable<Card> {
     inksJson: inksJson ?? this.inksJson,
     cost: cost ?? this.cost,
     inkwell: inkwell ?? this.inkwell,
-    promoGrouping:
-        promoGrouping.present ? promoGrouping.value : this.promoGrouping,
+    promoGrouping: promoGrouping.present
+        ? promoGrouping.value
+        : this.promoGrouping,
     foilTypesJson: foilTypesJson ?? this.foilTypesJson,
     imagesJson: imagesJson ?? this.imagesJson,
     externalLinksJson: externalLinksJson ?? this.externalLinksJson,
@@ -709,11 +693,13 @@ class Card extends DataClass implements Insertable<Card> {
       setCode: data.setCode.present ? data.setCode.value : this.setCode,
       number: data.number.present ? data.number.value : this.number,
       language: data.language.present ? data.language.value : this.language,
-      simpleName:
-          data.simpleName.present ? data.simpleName.value : this.simpleName,
+      simpleName: data.simpleName.present
+          ? data.simpleName.value
+          : this.simpleName,
       fullName: data.fullName.present ? data.fullName.value : this.fullName,
-      searchName:
-          data.searchName.present ? data.searchName.value : this.searchName,
+      searchName: data.searchName.present
+          ? data.searchName.value
+          : this.searchName,
       rarity: data.rarity.present ? data.rarity.value : this.rarity,
       type: data.type.present ? data.type.value : this.type,
       story: data.story.present ? data.story.value : this.story,
@@ -721,24 +707,21 @@ class Card extends DataClass implements Insertable<Card> {
       inksJson: data.inksJson.present ? data.inksJson.value : this.inksJson,
       cost: data.cost.present ? data.cost.value : this.cost,
       inkwell: data.inkwell.present ? data.inkwell.value : this.inkwell,
-      promoGrouping:
-          data.promoGrouping.present
-              ? data.promoGrouping.value
-              : this.promoGrouping,
-      foilTypesJson:
-          data.foilTypesJson.present
-              ? data.foilTypesJson.value
-              : this.foilTypesJson,
-      imagesJson:
-          data.imagesJson.present ? data.imagesJson.value : this.imagesJson,
-      externalLinksJson:
-          data.externalLinksJson.present
-              ? data.externalLinksJson.value
-              : this.externalLinksJson,
-      cardmarketId:
-          data.cardmarketId.present
-              ? data.cardmarketId.value
-              : this.cardmarketId,
+      promoGrouping: data.promoGrouping.present
+          ? data.promoGrouping.value
+          : this.promoGrouping,
+      foilTypesJson: data.foilTypesJson.present
+          ? data.foilTypesJson.value
+          : this.foilTypesJson,
+      imagesJson: data.imagesJson.present
+          ? data.imagesJson.value
+          : this.imagesJson,
+      externalLinksJson: data.externalLinksJson.present
+          ? data.externalLinksJson.value
+          : this.externalLinksJson,
+      cardmarketId: data.cardmarketId.present
+          ? data.cardmarketId.value
+          : this.cardmarketId,
     );
   }
 
@@ -835,6 +818,7 @@ class CardsCompanion extends UpdateCompanion<Card> {
   final Value<String> imagesJson;
   final Value<String> externalLinksJson;
   final Value<int?> cardmarketId;
+  final Value<int> rowid;
   const CardsCompanion({
     this.id = const Value.absent(),
     this.setCode = const Value.absent(),
@@ -855,9 +839,10 @@ class CardsCompanion extends UpdateCompanion<Card> {
     this.imagesJson = const Value.absent(),
     this.externalLinksJson = const Value.absent(),
     this.cardmarketId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   CardsCompanion.insert({
-    this.id = const Value.absent(),
+    required int id,
     required String setCode,
     required int number,
     this.language = const Value.absent(),
@@ -876,7 +861,9 @@ class CardsCompanion extends UpdateCompanion<Card> {
     this.imagesJson = const Value.absent(),
     this.externalLinksJson = const Value.absent(),
     this.cardmarketId = const Value.absent(),
-  }) : setCode = Value(setCode),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       setCode = Value(setCode),
        number = Value(number),
        simpleName = Value(simpleName),
        fullName = Value(fullName),
@@ -906,6 +893,7 @@ class CardsCompanion extends UpdateCompanion<Card> {
     Expression<String>? imagesJson,
     Expression<String>? externalLinksJson,
     Expression<int>? cardmarketId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -927,6 +915,7 @@ class CardsCompanion extends UpdateCompanion<Card> {
       if (imagesJson != null) 'images_json': imagesJson,
       if (externalLinksJson != null) 'external_links_json': externalLinksJson,
       if (cardmarketId != null) 'cardmarket_id': cardmarketId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
@@ -950,6 +939,7 @@ class CardsCompanion extends UpdateCompanion<Card> {
     Value<String>? imagesJson,
     Value<String>? externalLinksJson,
     Value<int?>? cardmarketId,
+    Value<int>? rowid,
   }) {
     return CardsCompanion(
       id: id ?? this.id,
@@ -971,6 +961,7 @@ class CardsCompanion extends UpdateCompanion<Card> {
       imagesJson: imagesJson ?? this.imagesJson,
       externalLinksJson: externalLinksJson ?? this.externalLinksJson,
       cardmarketId: cardmarketId ?? this.cardmarketId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -1034,6 +1025,9 @@ class CardsCompanion extends UpdateCompanion<Card> {
     if (cardmarketId.present) {
       map['cardmarket_id'] = Variable<int>(cardmarketId.value);
     }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
@@ -1058,7 +1052,8 @@ class CardsCompanion extends UpdateCompanion<Card> {
           ..write('foilTypesJson: $foilTypesJson, ')
           ..write('imagesJson: $imagesJson, ')
           ..write('externalLinksJson: $externalLinksJson, ')
-          ..write('cardmarketId: $cardmarketId')
+          ..write('cardmarketId: $cardmarketId, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -1077,7 +1072,19 @@ class $CollectionEntriesTable extends CollectionEntries
     aliasedName,
     false,
     type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _languageMeta = const VerificationMeta(
+    'language',
+  );
+  @override
+  late final GeneratedColumn<String> language = GeneratedColumn<String>(
+    'language',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant('de'),
   );
   static const VerificationMeta _amountMeta = const VerificationMeta('amount');
   @override
@@ -1113,7 +1120,13 @@ class $CollectionEntriesTable extends CollectionEntries
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [cardId, amount, amountFoil, updatedAt];
+  List<GeneratedColumn> get $columns => [
+    cardId,
+    language,
+    amount,
+    amountFoil,
+    updatedAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1130,6 +1143,14 @@ class $CollectionEntriesTable extends CollectionEntries
       context.handle(
         _cardIdMeta,
         cardId.isAcceptableOrUnknown(data['card_id']!, _cardIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cardIdMeta);
+    }
+    if (data.containsKey('language')) {
+      context.handle(
+        _languageMeta,
+        language.isAcceptableOrUnknown(data['language']!, _languageMeta),
       );
     }
     if (data.containsKey('amount')) {
@@ -1156,31 +1177,31 @@ class $CollectionEntriesTable extends CollectionEntries
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {cardId};
+  Set<GeneratedColumn> get $primaryKey => {cardId, language};
   @override
   CollectionEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return CollectionEntry(
-      cardId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}card_id'],
-          )!,
-      amount:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}amount'],
-          )!,
-      amountFoil:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}amount_foil'],
-          )!,
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      cardId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}card_id'],
+      )!,
+      language: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}language'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount'],
+      )!,
+      amountFoil: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_foil'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
     );
   }
 
@@ -1192,11 +1213,13 @@ class $CollectionEntriesTable extends CollectionEntries
 
 class CollectionEntry extends DataClass implements Insertable<CollectionEntry> {
   final int cardId;
+  final String language;
   final int amount;
   final int amountFoil;
   final int updatedAt;
   const CollectionEntry({
     required this.cardId,
+    required this.language,
     required this.amount,
     required this.amountFoil,
     required this.updatedAt,
@@ -1205,6 +1228,7 @@ class CollectionEntry extends DataClass implements Insertable<CollectionEntry> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['card_id'] = Variable<int>(cardId);
+    map['language'] = Variable<String>(language);
     map['amount'] = Variable<int>(amount);
     map['amount_foil'] = Variable<int>(amountFoil);
     map['updated_at'] = Variable<int>(updatedAt);
@@ -1214,6 +1238,7 @@ class CollectionEntry extends DataClass implements Insertable<CollectionEntry> {
   CollectionEntriesCompanion toCompanion(bool nullToAbsent) {
     return CollectionEntriesCompanion(
       cardId: Value(cardId),
+      language: Value(language),
       amount: Value(amount),
       amountFoil: Value(amountFoil),
       updatedAt: Value(updatedAt),
@@ -1227,6 +1252,7 @@ class CollectionEntry extends DataClass implements Insertable<CollectionEntry> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CollectionEntry(
       cardId: serializer.fromJson<int>(json['cardId']),
+      language: serializer.fromJson<String>(json['language']),
       amount: serializer.fromJson<int>(json['amount']),
       amountFoil: serializer.fromJson<int>(json['amountFoil']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
@@ -1237,6 +1263,7 @@ class CollectionEntry extends DataClass implements Insertable<CollectionEntry> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'cardId': serializer.toJson<int>(cardId),
+      'language': serializer.toJson<String>(language),
       'amount': serializer.toJson<int>(amount),
       'amountFoil': serializer.toJson<int>(amountFoil),
       'updatedAt': serializer.toJson<int>(updatedAt),
@@ -1245,11 +1272,13 @@ class CollectionEntry extends DataClass implements Insertable<CollectionEntry> {
 
   CollectionEntry copyWith({
     int? cardId,
+    String? language,
     int? amount,
     int? amountFoil,
     int? updatedAt,
   }) => CollectionEntry(
     cardId: cardId ?? this.cardId,
+    language: language ?? this.language,
     amount: amount ?? this.amount,
     amountFoil: amountFoil ?? this.amountFoil,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -1257,9 +1286,11 @@ class CollectionEntry extends DataClass implements Insertable<CollectionEntry> {
   CollectionEntry copyWithCompanion(CollectionEntriesCompanion data) {
     return CollectionEntry(
       cardId: data.cardId.present ? data.cardId.value : this.cardId,
+      language: data.language.present ? data.language.value : this.language,
       amount: data.amount.present ? data.amount.value : this.amount,
-      amountFoil:
-          data.amountFoil.present ? data.amountFoil.value : this.amountFoil,
+      amountFoil: data.amountFoil.present
+          ? data.amountFoil.value
+          : this.amountFoil,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -1268,6 +1299,7 @@ class CollectionEntry extends DataClass implements Insertable<CollectionEntry> {
   String toString() {
     return (StringBuffer('CollectionEntry(')
           ..write('cardId: $cardId, ')
+          ..write('language: $language, ')
           ..write('amount: $amount, ')
           ..write('amountFoil: $amountFoil, ')
           ..write('updatedAt: $updatedAt')
@@ -1276,12 +1308,14 @@ class CollectionEntry extends DataClass implements Insertable<CollectionEntry> {
   }
 
   @override
-  int get hashCode => Object.hash(cardId, amount, amountFoil, updatedAt);
+  int get hashCode =>
+      Object.hash(cardId, language, amount, amountFoil, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is CollectionEntry &&
           other.cardId == this.cardId &&
+          other.language == this.language &&
           other.amount == this.amount &&
           other.amountFoil == this.amountFoil &&
           other.updatedAt == this.updatedAt);
@@ -1289,46 +1323,61 @@ class CollectionEntry extends DataClass implements Insertable<CollectionEntry> {
 
 class CollectionEntriesCompanion extends UpdateCompanion<CollectionEntry> {
   final Value<int> cardId;
+  final Value<String> language;
   final Value<int> amount;
   final Value<int> amountFoil;
   final Value<int> updatedAt;
+  final Value<int> rowid;
   const CollectionEntriesCompanion({
     this.cardId = const Value.absent(),
+    this.language = const Value.absent(),
     this.amount = const Value.absent(),
     this.amountFoil = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   CollectionEntriesCompanion.insert({
-    this.cardId = const Value.absent(),
+    required int cardId,
+    this.language = const Value.absent(),
     this.amount = const Value.absent(),
     this.amountFoil = const Value.absent(),
     required int updatedAt,
-  }) : updatedAt = Value(updatedAt);
+    this.rowid = const Value.absent(),
+  }) : cardId = Value(cardId),
+       updatedAt = Value(updatedAt);
   static Insertable<CollectionEntry> custom({
     Expression<int>? cardId,
+    Expression<String>? language,
     Expression<int>? amount,
     Expression<int>? amountFoil,
     Expression<int>? updatedAt,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (cardId != null) 'card_id': cardId,
+      if (language != null) 'language': language,
       if (amount != null) 'amount': amount,
       if (amountFoil != null) 'amount_foil': amountFoil,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   CollectionEntriesCompanion copyWith({
     Value<int>? cardId,
+    Value<String>? language,
     Value<int>? amount,
     Value<int>? amountFoil,
     Value<int>? updatedAt,
+    Value<int>? rowid,
   }) {
     return CollectionEntriesCompanion(
       cardId: cardId ?? this.cardId,
+      language: language ?? this.language,
       amount: amount ?? this.amount,
       amountFoil: amountFoil ?? this.amountFoil,
       updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -1337,6 +1386,9 @@ class CollectionEntriesCompanion extends UpdateCompanion<CollectionEntry> {
     final map = <String, Expression>{};
     if (cardId.present) {
       map['card_id'] = Variable<int>(cardId.value);
+    }
+    if (language.present) {
+      map['language'] = Variable<String>(language.value);
     }
     if (amount.present) {
       map['amount'] = Variable<int>(amount.value);
@@ -1347,6 +1399,9 @@ class CollectionEntriesCompanion extends UpdateCompanion<CollectionEntry> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
@@ -1354,9 +1409,11 @@ class CollectionEntriesCompanion extends UpdateCompanion<CollectionEntry> {
   String toString() {
     return (StringBuffer('CollectionEntriesCompanion(')
           ..write('cardId: $cardId, ')
+          ..write('language: $language, ')
           ..write('amount: $amount, ')
           ..write('amountFoil: $amountFoil, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -1636,11 +1693,10 @@ class $PricesTable extends Prices with TableInfo<$PricesTable, Price> {
   Price map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Price(
-      cardmarketId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}cardmarket_id'],
-          )!,
+      cardmarketId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cardmarket_id'],
+      )!,
       avg: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}avg'],
@@ -1689,11 +1745,10 @@ class $PricesTable extends Prices with TableInfo<$PricesTable, Price> {
         DriftSqlType.double,
         data['${effectivePrefix}avg30_foil'],
       ),
-      fetchedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}fetched_at'],
-          )!,
+      fetchedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}fetched_at'],
+      )!,
     );
   }
 
@@ -1784,36 +1839,32 @@ class Price extends DataClass implements Insertable<Price> {
       cardmarketId: Value(cardmarketId),
       avg: avg == null && nullToAbsent ? const Value.absent() : Value(avg),
       low: low == null && nullToAbsent ? const Value.absent() : Value(low),
-      trend:
-          trend == null && nullToAbsent ? const Value.absent() : Value(trend),
+      trend: trend == null && nullToAbsent
+          ? const Value.absent()
+          : Value(trend),
       avg1: avg1 == null && nullToAbsent ? const Value.absent() : Value(avg1),
       avg7: avg7 == null && nullToAbsent ? const Value.absent() : Value(avg7),
-      avg30:
-          avg30 == null && nullToAbsent ? const Value.absent() : Value(avg30),
-      avgFoil:
-          avgFoil == null && nullToAbsent
-              ? const Value.absent()
-              : Value(avgFoil),
-      lowFoil:
-          lowFoil == null && nullToAbsent
-              ? const Value.absent()
-              : Value(lowFoil),
-      trendFoil:
-          trendFoil == null && nullToAbsent
-              ? const Value.absent()
-              : Value(trendFoil),
-      avg1Foil:
-          avg1Foil == null && nullToAbsent
-              ? const Value.absent()
-              : Value(avg1Foil),
-      avg7Foil:
-          avg7Foil == null && nullToAbsent
-              ? const Value.absent()
-              : Value(avg7Foil),
-      avg30Foil:
-          avg30Foil == null && nullToAbsent
-              ? const Value.absent()
-              : Value(avg30Foil),
+      avg30: avg30 == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avg30),
+      avgFoil: avgFoil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avgFoil),
+      lowFoil: lowFoil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lowFoil),
+      trendFoil: trendFoil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(trendFoil),
+      avg1Foil: avg1Foil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avg1Foil),
+      avg7Foil: avg7Foil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avg7Foil),
+      avg30Foil: avg30Foil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avg30Foil),
       fetchedAt: Value(fetchedAt),
     );
   }
@@ -1894,10 +1945,9 @@ class Price extends DataClass implements Insertable<Price> {
   );
   Price copyWithCompanion(PricesCompanion data) {
     return Price(
-      cardmarketId:
-          data.cardmarketId.present
-              ? data.cardmarketId.value
-              : this.cardmarketId,
+      cardmarketId: data.cardmarketId.present
+          ? data.cardmarketId.value
+          : this.cardmarketId,
       avg: data.avg.present ? data.avg.value : this.avg,
       low: data.low.present ? data.low.value : this.low,
       trend: data.trend.present ? data.trend.value : this.trend,
@@ -2219,16 +2269,14 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
   Setting map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Setting(
-      key:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}key'],
-          )!,
-      value:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}value'],
-          )!,
+      key: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}key'],
+      )!,
+      value: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}value'],
+      )!,
     );
   }
 
@@ -2389,7 +2437,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 
 typedef $$CardsTableCreateCompanionBuilder =
     CardsCompanion Function({
-      Value<int> id,
+      required int id,
       required String setCode,
       required int number,
       Value<String> language,
@@ -2408,6 +2456,7 @@ typedef $$CardsTableCreateCompanionBuilder =
       Value<String> imagesJson,
       Value<String> externalLinksJson,
       Value<int?> cardmarketId,
+      Value<int> rowid,
     });
 typedef $$CardsTableUpdateCompanionBuilder =
     CardsCompanion Function({
@@ -2430,6 +2479,7 @@ typedef $$CardsTableUpdateCompanionBuilder =
       Value<String> imagesJson,
       Value<String> externalLinksJson,
       Value<int?> cardmarketId,
+      Value<int> rowid,
     });
 
 class $$CardsTableFilterComposer extends Composer<_$AppDatabase, $CardsTable> {
@@ -2742,12 +2792,12 @@ class $$CardsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$CardsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$CardsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$CardsTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$CardsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CardsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CardsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -2769,6 +2819,7 @@ class $$CardsTableTableManager
                 Value<String> imagesJson = const Value.absent(),
                 Value<String> externalLinksJson = const Value.absent(),
                 Value<int?> cardmarketId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => CardsCompanion(
                 id: id,
                 setCode: setCode,
@@ -2789,10 +2840,11 @@ class $$CardsTableTableManager
                 imagesJson: imagesJson,
                 externalLinksJson: externalLinksJson,
                 cardmarketId: cardmarketId,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                required int id,
                 required String setCode,
                 required int number,
                 Value<String> language = const Value.absent(),
@@ -2811,6 +2863,7 @@ class $$CardsTableTableManager
                 Value<String> imagesJson = const Value.absent(),
                 Value<String> externalLinksJson = const Value.absent(),
                 Value<int?> cardmarketId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => CardsCompanion.insert(
                 id: id,
                 setCode: setCode,
@@ -2831,17 +2884,11 @@ class $$CardsTableTableManager
                 imagesJson: imagesJson,
                 externalLinksJson: externalLinksJson,
                 cardmarketId: cardmarketId,
+                rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -2863,17 +2910,21 @@ typedef $$CardsTableProcessedTableManager =
     >;
 typedef $$CollectionEntriesTableCreateCompanionBuilder =
     CollectionEntriesCompanion Function({
-      Value<int> cardId,
+      required int cardId,
+      Value<String> language,
       Value<int> amount,
       Value<int> amountFoil,
       required int updatedAt,
+      Value<int> rowid,
     });
 typedef $$CollectionEntriesTableUpdateCompanionBuilder =
     CollectionEntriesCompanion Function({
       Value<int> cardId,
+      Value<String> language,
       Value<int> amount,
       Value<int> amountFoil,
       Value<int> updatedAt,
+      Value<int> rowid,
     });
 
 class $$CollectionEntriesTableFilterComposer
@@ -2887,6 +2938,11 @@ class $$CollectionEntriesTableFilterComposer
   });
   ColumnFilters<int> get cardId => $composableBuilder(
     column: $table.cardId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get language => $composableBuilder(
+    column: $table.language,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2920,6 +2976,11 @@ class $$CollectionEntriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get language => $composableBuilder(
+    column: $table.language,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get amount => $composableBuilder(
     column: $table.amount,
     builder: (column) => ColumnOrderings(column),
@@ -2947,6 +3008,9 @@ class $$CollectionEntriesTableAnnotationComposer
   });
   GeneratedColumn<int> get cardId =>
       $composableBuilder(column: $table.cardId, builder: (column) => column);
+
+  GeneratedColumn<String> get language =>
+      $composableBuilder(column: $table.language, builder: (column) => column);
 
   GeneratedColumn<int> get amount =>
       $composableBuilder(column: $table.amount, builder: (column) => column);
@@ -2989,55 +3053,50 @@ class $$CollectionEntriesTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$CollectionEntriesTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer:
-              () => $$CollectionEntriesTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer:
-              () => $$CollectionEntriesTableAnnotationComposer(
+          createFilteringComposer: () =>
+              $$CollectionEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CollectionEntriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CollectionEntriesTableAnnotationComposer(
                 $db: db,
                 $table: table,
               ),
           updateCompanionCallback:
               ({
                 Value<int> cardId = const Value.absent(),
+                Value<String> language = const Value.absent(),
                 Value<int> amount = const Value.absent(),
                 Value<int> amountFoil = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => CollectionEntriesCompanion(
                 cardId: cardId,
+                language: language,
                 amount: amount,
                 amountFoil: amountFoil,
                 updatedAt: updatedAt,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> cardId = const Value.absent(),
+                required int cardId,
+                Value<String> language = const Value.absent(),
                 Value<int> amount = const Value.absent(),
                 Value<int> amountFoil = const Value.absent(),
                 required int updatedAt,
+                Value<int> rowid = const Value.absent(),
               }) => CollectionEntriesCompanion.insert(
                 cardId: cardId,
+                language: language,
                 amount: amount,
                 amountFoil: amountFoil,
                 updatedAt: updatedAt,
+                rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -3329,12 +3388,12 @@ class $$PricesTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$PricesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$PricesTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$PricesTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$PricesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PricesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PricesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> cardmarketId = const Value.absent(),
@@ -3399,16 +3458,9 @@ class $$PricesTableTableManager
                 avg30Foil: avg30Foil,
                 fetchedAt: fetchedAt,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -3517,12 +3569,12 @@ class $$SettingsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$SettingsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$SettingsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$SettingsTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$SettingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SettingsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SettingsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> key = const Value.absent(),
@@ -3539,16 +3591,9 @@ class $$SettingsTableTableManager
                 value: value,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );

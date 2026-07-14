@@ -16,22 +16,29 @@ class CardsDao extends DatabaseAccessor<AppDatabase> with _$CardsDaoMixin {
     return row.read(expr) ?? 0;
   }
 
-  /// Replaces the whole card table with [entries] in one transaction.
-  /// lorcanajson ids are identical across languages, so a language switch
-  /// must wipe everything — delete-by-language would collide on the id PK.
-  /// The collection table is untouched (ids are language-independent).
-  Future<void> replaceAll(List<CardsCompanion> entries) async {
+  Future<int> countLanguage(String language) async {
+    final expr = cards.id.count();
+    final query = selectOnly(cards)
+      ..addColumns([expr])
+      ..where(cards.language.equals(language));
+    final row = await query.getSingle();
+    return row.read(expr) ?? 0;
+  }
+
+  /// Replaces all cards of one [language] in one transaction. Both
+  /// languages live in the table permanently — (id, language) is the PK.
+  Future<void> replaceLanguage(
+    String language,
+    List<CardsCompanion> entries,
+  ) async {
     await transaction(() async {
-      await delete(cards).go();
+      await (delete(cards)..where((c) => c.language.equals(language))).go();
       await batch((b) => b.insertAll(cards, entries));
     });
   }
 
-  Future<Card?> byId(int id) =>
-      (select(cards)..where((c) => c.id.equals(id))).getSingleOrNull();
-
-  Future<Card?> bySetAndNumber(String setCode, int number) => (select(cards)
-        ..where((c) => c.setCode.equals(setCode) & c.number.equals(number)))
+  Future<Card?> byIdAndLanguage(int id, String language) => (select(cards)
+        ..where((c) => c.id.equals(id) & c.language.equals(language)))
       .getSingleOrNull();
 
   Stream<List<Card>> watchAll() => select(cards).watch();

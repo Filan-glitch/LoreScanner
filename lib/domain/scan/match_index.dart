@@ -1,12 +1,14 @@
 import '../../data/db/app_database.dart';
 
-/// One indexed card. Plain data — cheap to send across an isolate boundary.
+/// One indexed card printing in one language. Plain data — cheap to send
+/// across an isolate boundary.
 class IndexEntry {
   const IndexEntry({
     required this.cardId,
     required this.searchName,
     required this.setCode,
     required this.number,
+    this.language = 'de',
     this.promoGrouping,
   });
 
@@ -14,6 +16,10 @@ class IndexEntry {
   final String searchName;
   final String setCode;
   final int number;
+
+  /// Card language — search names differ per language, and the footer
+  /// carries a language code, so a match pins (cardId, language).
+  final String language;
   final String? promoGrouping;
 }
 
@@ -45,6 +51,7 @@ class MatchIndex {
             searchName: card.searchName,
             setCode: card.setCode,
             number: card.number,
+            language: card.language,
             promoGrouping: card.promoGrouping,
           ),
       ]);
@@ -64,14 +71,21 @@ class MatchIndex {
     ];
   }
 
-  /// Footer lookup: (number, setCode?, promo total segment). The total
-  /// segment separates promos (`P1`…) from same-numbered regular cards.
-  IndexEntry? byFooter(int number, {String? setCode, String? totalSegment}) {
+  /// Footer lookup: (number, setCode?, promo total segment, language?).
+  /// The total segment separates promos (`P1`…) from same-numbered regular
+  /// cards; the footer language code ('DE'/'EN') pins the print language.
+  IndexEntry? byFooter(
+    int number, {
+    String? setCode,
+    String? totalSegment,
+    String? language,
+  }) {
     final candidates = _byNumber[number] ?? const [];
     final isPromo = totalSegment != null && totalSegment.startsWith('P');
     final filtered = [
       for (final entry in candidates)
         if ((setCode == null || entry.setCode == setCode) &&
+            (language == null || entry.language == language) &&
             (totalSegment == null ||
                 (isPromo
                     ? entry.promoGrouping == totalSegment

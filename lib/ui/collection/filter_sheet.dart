@@ -53,6 +53,18 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                   setState(() => _draft = _draft.copyWith(ownedOnly: v)),
             ),
             _chipSection(
+              'Sprache',
+              const ['Deutsch', 'Englisch'],
+              {
+                for (final lang in _draft.languages)
+                  lang == 'de' ? 'Deutsch' : 'Englisch',
+              },
+              (v) => setState(() => _draft = _draft.copyWith(languages: {
+                    for (final label in v)
+                      label == 'Deutsch' ? 'de' : 'en',
+                  })),
+            ),
+            _chipSection(
               'Set',
               widget.sets,
               _draft.sets,

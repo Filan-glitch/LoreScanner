@@ -11,9 +11,16 @@ class MatchInput {
 }
 
 class MatchResult {
-  const MatchResult({required this.cardId, required this.score});
+  const MatchResult({
+    required this.cardId,
+    required this.language,
+    required this.score,
+  });
 
+  /// Language of the matched print — collection entries are per
+  /// (cardId, language).
   final int cardId;
+  final String language;
   final double score;
 }
 
@@ -25,15 +32,16 @@ class MatchResult {
 MatchResult? matchCards(MatchInput input) {
   final parsed = input.parsed;
   final index = input.index;
-  final scores = <int, double>{};
+  // Keyed by (cardId, language) — the same id exists in both languages.
+  final scores = <(int, String), double>{};
 
   for (final candidate in parsed.nameCandidates) {
     for (final entry in index.candidatesFor(candidate)) {
       final score = _nameScore(candidate, entry.searchName);
       if (score <= 0) continue;
       final fused = _fuseFooter(score, entry, parsed.footer);
-      scores.update(entry.cardId, (v) => v > fused ? v : fused,
-          ifAbsent: () => fused);
+      final key = (entry.cardId, entry.language);
+      scores.update(key, (v) => v > fused ? v : fused, ifAbsent: () => fused);
     }
   }
 
@@ -47,14 +55,15 @@ MatchResult? matchCards(MatchInput input) {
       footer.number,
       setCode: footer.setCode,
       totalSegment: footer.totalSegment,
+      language: footer.language?.toLowerCase(),
     );
     if (entry != null) {
       final namePlausible = parsed.nameCandidates.isEmpty ||
           parsed.nameCandidates
               .any((c) => _nameScore(c, entry.searchName) >= 0.5);
       if (namePlausible) {
-        scores.update(entry.cardId, (v) => v > 0.9 ? v : 0.9,
-            ifAbsent: () => 0.9);
+        final key = (entry.cardId, entry.language);
+        scores.update(key, (v) => v > 0.9 ? v : 0.9, ifAbsent: () => 0.9);
       }
     }
   }
@@ -68,7 +77,11 @@ MatchResult? matchCards(MatchInput input) {
       best.value - ranked[1].value < matchAmbiguityWindow) {
     return null;
   }
-  return MatchResult(cardId: best.key, score: best.value);
+  return MatchResult(
+    cardId: best.key.$1,
+    language: best.key.$2,
+    score: best.value,
+  );
 }
 
 double _nameScore(String candidate, String searchName) {
@@ -93,6 +106,10 @@ double _fuseFooter(double score, IndexEntry entry, FooterInfo? footer) {
   if (footer == null) return score;
   final numberMatches = entry.number == footer.number;
   final setMatches = footer.setCode == null || entry.setCode == footer.setCode;
+  // Footer language code pins the print language (DE vs EN copy).
+  final langMatches = footer.language == null ||
+      entry.language == footer.language!.toLowerCase();
+  if (!langMatches) return score - 0.1;
   // The total segment separates promos from same-numbered regular prints:
   // 20/P1 must hit the promoGrouping=P1 card, 20/204 the regular one.
   final promoMatches = footer.isPromo

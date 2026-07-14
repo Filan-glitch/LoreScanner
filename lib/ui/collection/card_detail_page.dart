@@ -8,32 +8,40 @@ import '../../domain/models/card_ext.dart';
 import '../../providers.dart';
 
 class CardDetailPage extends ConsumerWidget {
-  const CardDetailPage({super.key, required this.cardId});
+  const CardDetailPage({
+    super.key,
+    required this.cardId,
+    required this.language,
+  });
 
   final int cardId;
+  final String language;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final entries = ref.watch(allCardsProvider).valueOrNull;
-    final entry = entries?.where((e) => e.card.id == cardId).firstOrNull;
+    final entryAsync = ref.watch(cardEntryProvider((cardId, language)));
 
     return Scaffold(
       appBar: AppBar(title: const Text('Detailansicht')),
-      body: entry == null
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _CardImage(entry: entry),
-                  _CardHeader(entry: entry),
-                  _CollectionEdit(entry: entry),
-                  _PricesSection(entry: entry),
-                  _AttributesSection(entry: entry),
-                  const SizedBox(height: 24),
-                ],
+      body: entryAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Fehler: $e')),
+        data: (entry) => entry == null
+            ? const Center(child: Text('Karte nicht gefunden'))
+            : SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _CardImage(entry: entry),
+                    _CardHeader(entry: entry),
+                    _CollectionEdit(entry: entry),
+                    _PricesSection(entry: entry),
+                    _AttributesSection(entry: entry),
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
-            ),
+      ),
     );
   }
 }
@@ -61,6 +69,9 @@ class _CardImage extends StatelessWidget {
             : CachedNetworkImage(
                 imageUrl: url,
                 fit: BoxFit.contain,
+                // Decode at display height instead of full resolution.
+                memCacheHeight:
+                    (400 * MediaQuery.devicePixelRatioOf(context)).round(),
                 placeholder: (_, _) => Container(
                   color: theme.colorScheme.surfaceContainerHighest,
                   child: const Center(child: CircularProgressIndicator()),
@@ -95,6 +106,7 @@ class _CardHeader extends StatelessWidget {
             spacing: 8,
             children: [
               Chip(label: Text('Set ${card.setCode} · Nr. ${card.number}')),
+              Chip(label: Text(card.language == 'de' ? 'Deutsch' : 'Englisch')),
               Chip(label: Text(card.rarity)),
               if (card.ink.isNotEmpty) Chip(label: Text(card.ink)),
             ],
@@ -112,7 +124,7 @@ class _CollectionEdit extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final db = ref.watch(databaseProvider);
+    final repo = ref.watch(cardRepositoryProvider);
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -126,18 +138,19 @@ class _CollectionEdit extends ConsumerWidget {
             context,
             label: 'Normal',
             value: entry.amount,
-            onAdd: () => db.collectionDao.addCard(entry.card.id),
-            onRemove: () => db.collectionDao.removeCard(entry.card.id),
+            onAdd: () => repo.addCard(entry.card.id, entry.card.language),
+            onRemove: () =>
+                repo.removeCard(entry.card.id, entry.card.language),
           ),
           const SizedBox(height: 8),
           _stepper(
             context,
             label: 'Foil ✦',
             value: entry.amountFoil,
-            onAdd: () =>
-                db.collectionDao.addCard(entry.card.id, amount: 0, amountFoil: 1),
-            onRemove: () => db.collectionDao
-                .removeCard(entry.card.id, amount: 0, amountFoil: 1),
+            onAdd: () => repo.addCard(entry.card.id, entry.card.language,
+                amount: 0, amountFoil: 1),
+            onRemove: () => repo.removeCard(entry.card.id, entry.card.language,
+                amount: 0, amountFoil: 1),
           ),
         ],
       ),
@@ -157,6 +170,7 @@ class _CollectionEdit extends ConsumerWidget {
         Expanded(child: Text(label, style: theme.textTheme.titleMedium)),
         IconButton.filledTonal(
           onPressed: value > 0 ? onRemove : null,
+          tooltip: '$label entfernen',
           icon: const Icon(Icons.remove),
         ),
         SizedBox(
@@ -167,7 +181,11 @@ class _CollectionEdit extends ConsumerWidget {
             style: theme.textTheme.titleLarge,
           ),
         ),
-        IconButton.filledTonal(onPressed: onAdd, icon: const Icon(Icons.add)),
+        IconButton.filledTonal(
+          onPressed: onAdd,
+          tooltip: '$label hinzufügen',
+          icon: const Icon(Icons.add),
+        ),
       ],
     );
   }

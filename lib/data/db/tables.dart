@@ -1,7 +1,8 @@
 import 'package:drift/drift.dart';
 
-/// Card definitions synced from lorcanajson. One row per printing
-/// (lorcanajson ids are printing-distinct). Complex fields stay JSON text;
+/// Card definitions synced from lorcanajson — both languages permanently.
+/// lorcanajson ids are printing-distinct but identical across languages,
+/// so the primary key is (id, language). Complex fields stay JSON text;
 /// the domain mapper decodes them.
 class Cards extends Table {
   IntColumn get id => integer()();
@@ -33,17 +34,20 @@ class Cards extends Table {
   IntColumn get cardmarketId => integer().nullable()();
 
   @override
-  Set<Column> get primaryKey => {id};
+  Set<Column> get primaryKey => {id, language};
 }
 
+/// Owned copies per physical card — language is part of the identity so a
+/// German and an English print of the same card count separately.
 class CollectionEntries extends Table {
-  IntColumn get cardId => integer().references(Cards, #id)();
+  IntColumn get cardId => integer()();
+  TextColumn get language => text().withDefault(const Constant('de'))();
   IntColumn get amount => integer().withDefault(const Constant(0))();
   IntColumn get amountFoil => integer().withDefault(const Constant(0))();
   IntColumn get updatedAt => integer()();
 
   @override
-  Set<Column> get primaryKey => {cardId};
+  Set<Column> get primaryKey => {cardId, language};
 }
 
 class Prices extends Table {

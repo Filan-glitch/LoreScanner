@@ -16,32 +16,39 @@ void main() {
 
   group('CollectionDao', () {
     test('addCard creates entry, second add accumulates', () async {
-      await db.collectionDao.addCard(1, amount: 2);
-      await db.collectionDao.addCard(1, amount: 1, amountFoil: 3);
-      final entry = await db.collectionDao.byCardId(1);
+      await db.collectionDao.addCard(1, 'de', amount: 2);
+      await db.collectionDao.addCard(1, 'de', amount: 1, amountFoil: 3);
+      final entry = await db.collectionDao.byCard(1, 'de');
       expect(entry!.amount, 3);
       expect(entry.amountFoil, 3);
     });
 
+    test('same card id in two languages counts separately', () async {
+      await db.collectionDao.addCard(1, 'de', amount: 2);
+      await db.collectionDao.addCard(1, 'en', amount: 1);
+      expect((await db.collectionDao.byCard(1, 'de'))!.amount, 2);
+      expect((await db.collectionDao.byCard(1, 'en'))!.amount, 1);
+    });
+
     test('removeCard decrements, deletes at zero', () async {
-      await db.collectionDao.addCard(1, amount: 2, amountFoil: 1);
-      await db.collectionDao.removeCard(1, amount: 1);
-      expect((await db.collectionDao.byCardId(1))!.amount, 1);
-      await db.collectionDao.removeCard(1, amount: 1, amountFoil: 1);
-      expect(await db.collectionDao.byCardId(1), isNull);
+      await db.collectionDao.addCard(1, 'de', amount: 2, amountFoil: 1);
+      await db.collectionDao.removeCard(1, 'de', amount: 1);
+      expect((await db.collectionDao.byCard(1, 'de'))!.amount, 1);
+      await db.collectionDao.removeCard(1, 'de', amount: 1, amountFoil: 1);
+      expect(await db.collectionDao.byCard(1, 'de'), isNull);
     });
 
     test('removeCard never goes negative', () async {
-      await db.collectionDao.addCard(1, amount: 1, amountFoil: 5);
-      await db.collectionDao.removeCard(1, amount: 10);
-      final entry = await db.collectionDao.byCardId(1);
+      await db.collectionDao.addCard(1, 'de', amount: 1, amountFoil: 5);
+      await db.collectionDao.removeCard(1, 'de', amount: 10);
+      final entry = await db.collectionDao.byCard(1, 'de');
       expect(entry!.amount, 0);
       expect(entry.amountFoil, 5);
     });
 
     test('removeCard on missing card is a no-op', () async {
-      await db.collectionDao.removeCard(99);
-      expect(await db.collectionDao.byCardId(99), isNull);
+      await db.collectionDao.removeCard(99, 'de');
+      expect(await db.collectionDao.byCard(99, 'de'), isNull);
     });
   });
 
@@ -65,17 +72,17 @@ void main() {
       expect(rows.first, (cardId: 1, amount: 2, amountFoil: 0));
 
       await db.collectionDao.importLegacyRows(rows);
-      expect((await db.collectionDao.byCardId(7))!.amountFoil, 1);
+      expect((await db.collectionDao.byCard(7, 'de'))!.amountFoil, 1);
 
       dir.deleteSync(recursive: true);
     });
 
     test('import ignores conflicts with existing entries', () async {
-      await db.collectionDao.addCard(1, amount: 5);
+      await db.collectionDao.addCard(1, 'de', amount: 5);
       await db.collectionDao
           .importLegacyRows([(cardId: 1, amount: 2, amountFoil: 0)]);
       // insertOrIgnore: existing (newer) entry wins.
-      expect((await db.collectionDao.byCardId(1))!.amount, 5);
+      expect((await db.collectionDao.byCard(1, 'de'))!.amount, 5);
     });
   });
 }

@@ -86,6 +86,8 @@ void main() {
       // Same name, different printings (normal vs promo).
       IndexEntry(cardId: 4, searchName: 'elsa schneekoenigin', setCode: '1', number: 20),
       IndexEntry(cardId: 5, searchName: 'elsa schneekoenigin', setCode: '1', number: 20, promoGrouping: 'P1'),
+      // English print of card 3 — same id, different language + name.
+      IndexEntry(cardId: 3, searchName: 'mighty sorcerer', setCode: '5', number: 42, language: 'en'),
     ]);
 
     MatchResult? match(List<String> names, {FooterInfo? footer}) =>
@@ -151,7 +153,24 @@ void main() {
             number: 42, totalSegment: '204', language: 'DE', setCode: '5'),
       )!;
       expect(result.cardId, 3);
+      expect(result.language, 'de');
       expect(result.score, 0.9);
+    });
+
+    test('english name matches the english print of the same id', () {
+      final result = match(['mighty sorcerer'])!;
+      expect(result.cardId, 3);
+      expect(result.language, 'en');
+    });
+
+    test('footer language code pins the print language', () {
+      final result = match(
+        [],
+        footer: const FooterInfo(
+            number: 42, totalSegment: '204', language: 'EN', setCode: '5'),
+      )!;
+      expect(result.cardId, 3);
+      expect(result.language, 'en');
     });
 
     test('footer alone without set code stays null when number ambiguous',

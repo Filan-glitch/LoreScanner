@@ -21,11 +21,13 @@ class ScanProgress {
   const ScanProgress({
     required this.phase,
     this.trackingCardId,
+    this.trackingLanguage,
     this.trackingHits = 0,
   });
 
   final ScanPhase phase;
   final int? trackingCardId;
+  final String? trackingLanguage;
   final int trackingHits;
 }
 
@@ -57,11 +59,11 @@ class ScanController {
   bool _busy = false;
   int _frameCount = 0;
   DateTime _lastFrameAt = DateTime.fromMillisecondsSinceEpoch(0);
-  int? _trackedCardId;
+  (int, String)? _trackedCard;
   int _trackedHits = 0;
   int _trackedMisses = 0;
   ScanPhase _lastPhase = ScanPhase.searching;
-  final Map<int, DateTime> _cooldowns = {};
+  final Map<(int, String), DateTime> _cooldowns = {};
 
   /// Preview widget size, fed from the page's LayoutBuilder — drives the
   /// ROI mapping so overlay and matcher share one geometry.
@@ -115,15 +117,15 @@ class ScanController {
   }
 
   void _resetTracking() {
-    _trackedCardId = null;
+    _trackedCard = null;
     _trackedHits = 0;
     _trackedMisses = 0;
   }
 
   /// Puts a just-confirmed card on cooldown so the next frames don't
   /// immediately re-detect it.
-  void cooldown(int cardId) {
-    _cooldowns[cardId] = DateTime.now().add(scanCardCooldown);
+  void cooldown(int cardId, String language) {
+    _cooldowns[(cardId, language)] = DateTime.now().add(scanCardCooldown);
     _resetTracking();
   }
 
@@ -134,7 +136,8 @@ class ScanController {
     _lastPhase = phase;
     onProgress(ScanProgress(
       phase: phase,
-      trackingCardId: _trackedCardId,
+      trackingCardId: _trackedCard?.$1,
+      trackingLanguage: _trackedCard?.$2,
       trackingHits: _trackedHits,
     ));
   }
@@ -217,22 +220,22 @@ class ScanController {
   }
 
   void _track(MatchResult? result) {
-    final cardId = result?.cardId;
-    if (cardId != null) {
-      final coolUntil = _cooldowns[cardId];
+    final key = result == null ? null : (result.cardId, result.language);
+    if (key != null) {
+      final coolUntil = _cooldowns[key];
       if (coolUntil != null && DateTime.now().isBefore(coolUntil)) return;
     }
 
-    if (cardId == null || cardId != _trackedCardId) {
-      if (cardId == null) {
+    if (key == null || key != _trackedCard) {
+      if (key == null) {
         // Tolerate brief dropouts before giving up on the tracked card.
-        if (_trackedCardId != null && ++_trackedMisses >= 2) {
+        if (_trackedCard != null && ++_trackedMisses >= 2) {
           _resetTracking();
           _emit(ScanPhase.searching);
         }
         return;
       }
-      _trackedCardId = cardId;
+      _trackedCard = key;
       _trackedHits = 1;
       _trackedMisses = 0;
       // High-certainty reads detect on the very first frame.
@@ -353,21 +356,26 @@ class ScanNotifier extends Notifier<ScanState> {
     state = ScanStreaming(
       phase: progress.phase,
       trackingCardId: progress.trackingCardId,
+      trackingLanguage: progress.trackingLanguage,
       trackingHits: progress.trackingHits,
       requiredHits: scanStabilityHits,
     );
   }
 
   void _onDetected(MatchResult result) {
-    state = ScanDetected(cardId: result.cardId, score: result.score);
+    state = ScanDetected(
+      cardId: result.cardId,
+      language: result.language,
+      score: result.score,
+    );
     _dismissTimer?.cancel();
     _dismissTimer = Timer(scanConfirmTimeout, dismiss);
   }
 
   /// User confirmed the detected card — caller persists, we cool down.
-  void confirmed(int cardId) {
+  void confirmed(int cardId, String language) {
     _dismissTimer?.cancel();
-    _controller?.cooldown(cardId);
+    _controller?.cooldown(cardId, language);
     HapticFeedback.mediumImpact();
     state = const ScanStreaming();
   }
@@ -376,7 +384,7 @@ class ScanNotifier extends Notifier<ScanState> {
     _dismissTimer?.cancel();
     final s = state;
     if (s is ScanDetected) {
-      _controller?.cooldown(s.cardId);
+      _controller?.cooldown(s.cardId, s.language);
       state = const ScanStreaming();
     }
   }

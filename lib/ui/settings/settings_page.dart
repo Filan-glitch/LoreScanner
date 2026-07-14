@@ -9,7 +9,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants.dart';
 import '../../core/logging.dart';
-import '../../data/db/app_database.dart';
 import '../../data/repositories/sync_service.dart';
 import '../../domain/export/csv_exporter.dart';
 import '../../providers.dart';
@@ -19,7 +18,6 @@ class SettingsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final language = ref.watch(cardLanguageProvider).valueOrNull ?? 'de';
     final themeMode = ref.watch(themeModeProvider);
 
     return Scaffold(
@@ -38,11 +36,11 @@ class SettingsPage extends ConsumerWidget {
             onTap: () => _pickTheme(context, ref, themeMode),
           ),
           const _SectionHeader('Kartendaten'),
-          ListTile(
-            leading: const Icon(Icons.language),
-            title: const Text('Kartensprache'),
-            subtitle: Text(language == 'de' ? 'Deutsch' : 'Englisch'),
-            onTap: () => _pickLanguage(context, ref, language),
+          const ListTile(
+            leading: Icon(Icons.language),
+            title: Text('Kartensprachen'),
+            subtitle: Text('Deutsch und Englisch werden automatisch '
+                'synchronisiert'),
           ),
           ListTile(
             leading: const Icon(Icons.sync),
@@ -118,36 +116,6 @@ class SettingsPage extends ConsumerWidget {
     if (mode != null) {
       await ref.read(themeModeProvider.notifier).set(mode);
     }
-  }
-
-  Future<void> _pickLanguage(
-      BuildContext context, WidgetRef ref, String current) async {
-    final language = await showDialog<String>(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: const Text('Kartensprache'),
-        children: [
-          RadioGroup<String>(
-            groupValue: current,
-            onChanged: (v) => Navigator.pop(context, v),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final (code, label) in [
-                  ('de', 'Deutsch'),
-                  ('en', 'Englisch'),
-                ])
-                  RadioListTile<String>(title: Text(label), value: code),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-    if (language == null || language == current) return;
-    final db = ref.read(databaseProvider);
-    await db.setSetting(SettingKeys.cardLanguage, language);
-    if (context.mounted) _syncNow(context, ref, force: true);
   }
 
   Future<void> _syncNow(BuildContext context, WidgetRef ref,

@@ -4,12 +4,15 @@ import 'package:lorescanner/data/repositories/card_repository.dart';
 import 'package:lorescanner/domain/export/csv_exporter.dart';
 
 Card _card(int id,
-    {String setCode = '1', int? number, String? promoGrouping}) {
+    {String setCode = '1',
+    int? number,
+    String? promoGrouping,
+    String language = 'de'}) {
   return Card(
     id: id,
     setCode: setCode,
     number: number ?? id,
-    language: 'de',
+    language: language,
     simpleName: 'c$id',
     fullName: 'c$id',
     searchName: 'c$id',
@@ -49,5 +52,28 @@ void main() {
   test('empty collection exports header only', () {
     expect(toDreambornInk(const []),
         'Set Number,Card Number,Variant,Count\n');
+  });
+
+  test('malicious set segment is quoted and formula-neutralized', () {
+    final csv = toDreambornInk([
+      CollectionCard(
+          card: _card(1, number: 7, promoGrouping: '=1+1,"x"\nY'), amount: 1),
+      CollectionCard(
+          card: _card(2, number: 8, promoGrouping: '+SUM(A1)'), amount: 1),
+    ]);
+    expect(csv, 'Set Number,Card Number,Variant,Count\n'
+        '"\'=1+1,""x""\nY",7,normal,1\n'
+        "'+SUM(A1),8,normal,1\n");
+  });
+
+  test('DE and EN copies of the same printing are summed', () {
+    final csv = toDreambornInk([
+      CollectionCard(card: _card(1, number: 12), amount: 2),
+      CollectionCard(
+          card: _card(1, number: 12, language: 'en'), amount: 1, amountFoil: 1),
+    ]);
+    expect(csv, 'Set Number,Card Number,Variant,Count\n'
+        '1,12,normal,3\n'
+        '1,12,foil,1\n');
   });
 }

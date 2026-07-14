@@ -15,8 +15,13 @@ import 'tables.dart';
 
 part 'app_database.g.dart';
 
+/// Languages the app permanently syncs and scans.
+const List<String> supportedLanguages = ['de', 'en'];
+
 /// Well-known settings keys.
 abstract final class SettingKeys {
+  /// Legacy (schema v1): single card-data language. Only read during the
+  /// v1→v2 migration to tag existing collection rows.
   static const cardLanguage = 'cardLanguage';
   static const lastSyncCheckAt = 'lastSyncCheckAt';
   static const lastPriceFetchAt = 'lastPriceFetchAt';
@@ -38,20 +43,57 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async {
           await m.createAll();
-          await customStatement(
-              'CREATE INDEX IF NOT EXISTS idx_cards_set ON cards (set_code)');
-          await customStatement(
-              'CREATE INDEX IF NOT EXISTS idx_cards_lookup ON cards (set_code, number)');
-          await customStatement(
-              'CREATE INDEX IF NOT EXISTS idx_cards_cm ON cards (cardmarket_id)');
+          await _createIndexes();
+        },
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            // v1 -> v2: primary keys gain the language dimension.
+            // Cards are re-synced anyway — drop and recreate.
+            await m.drop(cards);
+            await m.create(cards);
+            // Collection rows are user data: tag them with the v1
+            // single-language setting (default 'de'), then swap tables.
+            await customStatement('''
+              CREATE TABLE collection_entries_v2 (
+                card_id INTEGER NOT NULL,
+                language TEXT NOT NULL DEFAULT 'de',
+                amount INTEGER NOT NULL DEFAULT 0,
+                amount_foil INTEGER NOT NULL DEFAULT 0,
+                updated_at INTEGER NOT NULL,
+                PRIMARY KEY (card_id, language)
+              )
+            ''');
+            await customStatement('''
+              INSERT INTO collection_entries_v2
+                (card_id, language, amount, amount_foil, updated_at)
+              SELECT card_id,
+                COALESCE((SELECT value FROM settings
+                          WHERE key = 'cardLanguage'), 'de'),
+                amount, amount_foil, updated_at
+              FROM collection_entries
+            ''');
+            await customStatement('DROP TABLE collection_entries');
+            await customStatement('ALTER TABLE collection_entries_v2 '
+                'RENAME TO collection_entries');
+            await _createIndexes();
+          }
         },
       );
+
+  Future<void> _createIndexes() async {
+    await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_cards_set ON cards (set_code)');
+    await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_cards_lookup ON cards (set_code, number)');
+    await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_cards_cm ON cards (cardmarket_id)');
+  }
 
   // --- Settings helpers ---
 

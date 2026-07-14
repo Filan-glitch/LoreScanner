@@ -14,11 +14,20 @@ class CardGridTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final url = entry.card.thumbnailUrl;
+    // Decode at roughly the rendered tile size (2-column grid) instead of
+    // the downloaded resolution.
+    final cacheWidth = (MediaQuery.sizeOf(context).width /
+            2 *
+            MediaQuery.devicePixelRatioOf(context))
+        .round();
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => CardDetailPage(cardId: entry.card.id),
+          builder: (_) => CardDetailPage(
+            cardId: entry.card.id,
+            language: entry.card.language,
+          ),
         ),
       ),
       child: Stack(
@@ -34,6 +43,7 @@ class CardGridTile extends StatelessWidget {
                   : CachedNetworkImage(
                       imageUrl: url,
                       fit: BoxFit.cover,
+                      memCacheWidth: cacheWidth,
                       placeholder: (_, _) => Container(
                         color: theme.colorScheme.surfaceContainerHighest,
                         child:
@@ -44,6 +54,22 @@ class CardGridTile extends StatelessWidget {
                         child: const Icon(Icons.error),
                       ),
                     ),
+            ),
+          ),
+          Positioned(
+            top: 8,
+            left: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.black.withAlpha(153),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                entry.card.language.toUpperCase(),
+                style: theme.textTheme.labelSmall
+                    ?.copyWith(color: Colors.white),
+              ),
             ),
           ),
           if (entry.isOwned)

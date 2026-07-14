@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
@@ -75,17 +76,24 @@ final collectionValueProvider = Provider<AsyncValue<CollectionValue>>((ref) {
 final cardRepositoryProvider =
     Provider<CardRepository>((ref) => CardRepository(ref.watch(databaseProvider)));
 
-/// Current card-data language ('de' default), reactive to settings writes.
-final cardLanguageProvider = StreamProvider<String>((ref) => ref
-    .watch(databaseProvider)
-    .watchSetting(SettingKeys.cardLanguage)
-    .map((v) => v ?? 'de'));
+/// Full card list (both languages) joined with per-language collection
+/// amounts.
+final allCardsProvider = StreamProvider<List<CollectionCard>>(
+    (ref) => ref.watch(cardRepositoryProvider).watchAllWithCollection());
 
-/// Full card list joined with collection amounts for the active language.
-final allCardsProvider = StreamProvider<List<CollectionCard>>((ref) {
-  final language = ref.watch(cardLanguageProvider).valueOrNull ?? 'de';
-  return ref.watch(cardRepositoryProvider).watchAllWithCollection(language);
-});
+/// All entries keyed by (id, language) — one pass per emission so the
+/// per-card family below gets O(1) lookups.
+final _cardsByKeyProvider =
+    Provider<AsyncValue<Map<(int, String), CollectionCard>>>((ref) =>
+        ref.watch(allCardsProvider).whenData((entries) =>
+            {for (final e in entries) (e.card.id, e.card.language): e}));
+
+/// Single card entry by (id, language). Dependents rebuild only when that
+/// entry changes — not on every collection mutation ([CollectionCard]
+/// implements value equality for exactly this).
+final cardEntryProvider =
+    Provider.family<AsyncValue<CollectionCard?>, (int, String)>(
+        (ref, key) => ref.watch(_cardsByKeyProvider).whenData((map) => map[key]));
 
 class CollectionFilterNotifier extends Notifier<CollectionFilter> {
   @override
@@ -111,11 +119,27 @@ final filteredCardsProvider = Provider<AsyncValue<List<CollectionCard>>>((ref) {
 final collectionStatsProvider = Provider<AsyncValue<CollectionStats>>((ref) =>
     ref.watch(allCardsProvider).whenData(CollectionStats.fromEntries));
 
-/// Prebuilt scanner match index — rebuilds when the card list changes.
-final matchIndexProvider = Provider<MatchIndex>((ref) {
-  final entries = ref.watch(allCardsProvider).valueOrNull ?? const [];
-  return MatchIndex.fromCards([for (final e in entries) e.card]);
-});
+/// Prebuilt scanner match index — rebuilt only when the card rows change.
+/// Collection mutations (every "+1" during a scan session) re-emit through
+/// [allCardsProvider] but must not pay for an index rebuild.
+class MatchIndexNotifier extends Notifier<MatchIndex> {
+  List<Card>? _lastCards;
+  MatchIndex? _lastIndex;
+
+  @override
+  MatchIndex build() {
+    final entries = ref.watch(allCardsProvider).valueOrNull ?? const [];
+    final cards = [for (final e in entries) e.card];
+    if (_lastIndex == null || !listEquals(_lastCards, cards)) {
+      _lastCards = cards;
+      _lastIndex = MatchIndex.fromCards(cards);
+    }
+    return _lastIndex!;
+  }
+}
+
+final matchIndexProvider =
+    NotifierProvider<MatchIndexNotifier, MatchIndex>(MatchIndexNotifier.new);
 
 final scanProvider = NotifierProvider<ScanNotifier, ScanState>(
     () => ScanNotifier((ref) => ref.read(matchIndexProvider)));

@@ -33,12 +33,14 @@ class ScanStreaming extends ScanState {
   const ScanStreaming({
     this.phase = ScanPhase.searching,
     this.trackingCardId,
+    this.trackingLanguage,
     this.trackingHits = 0,
     this.requiredHits = 2,
   });
 
   final ScanPhase phase;
   final int? trackingCardId;
+  final String? trackingLanguage;
   final int trackingHits;
   final int requiredHits;
 }
@@ -46,9 +48,16 @@ class ScanStreaming extends ScanState {
 /// A card cleared threshold + stability — quick-confirm bar shows. The
 /// stream keeps running underneath.
 class ScanDetected extends ScanState {
-  const ScanDetected({required this.cardId, required this.score});
+  const ScanDetected({
+    required this.cardId,
+    required this.language,
+    required this.score,
+  });
 
   final int cardId;
+
+  /// Language of the scanned print — stored with the collection entry.
+  final String language;
   final double score;
 }
 

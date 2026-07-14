@@ -8,18 +8,20 @@ import '../../providers.dart';
 /// Quick-confirm strip shown while the stream keeps running: card preview,
 /// +1 / +1 Foil / dismiss.
 class ScanConfirmBar extends ConsumerWidget {
-  const ScanConfirmBar({super.key, required this.cardId});
+  const ScanConfirmBar({
+    super.key,
+    required this.cardId,
+    required this.language,
+  });
 
   final int cardId;
+  final String language;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final entry = ref
-        .watch(allCardsProvider)
-        .valueOrNull
-        ?.where((e) => e.card.id == cardId)
-        .firstOrNull;
+    final entry =
+        ref.watch(cardEntryProvider((cardId, language))).valueOrNull;
     if (entry == null) return const SizedBox.shrink();
     final card = entry.card;
 
@@ -39,7 +41,12 @@ class ScanConfirmBar extends ConsumerWidget {
                 child: card.thumbnailUrl == null
                     ? const ColoredBox(color: Colors.black12)
                     : CachedNetworkImage(
-                        imageUrl: card.thumbnailUrl!, fit: BoxFit.cover),
+                        imageUrl: card.thumbnailUrl!,
+                        fit: BoxFit.cover,
+                        memCacheWidth:
+                            (48 * MediaQuery.devicePixelRatioOf(context))
+                                .round(),
+                      ),
               ),
             ),
             const SizedBox(width: 12),
@@ -52,7 +59,9 @@ class ScanConfirmBar extends ConsumerWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall),
-                  Text('${card.setCode} · ${card.number}',
+                  Text(
+                      '${card.setCode} · ${card.number} · '
+                      '${card.language.toUpperCase()}',
                       style: theme.textTheme.bodySmall),
                 ],
               ),
@@ -69,6 +78,7 @@ class ScanConfirmBar extends ConsumerWidget {
             ),
             IconButton(
               onPressed: () => ref.read(scanProvider.notifier).dismiss(),
+              tooltip: 'Verwerfen',
               icon: const Icon(Icons.close),
             ),
           ],
@@ -78,12 +88,12 @@ class ScanConfirmBar extends ConsumerWidget {
   }
 
   void _confirm(WidgetRef ref, {required bool foil}) {
-    final db = ref.read(databaseProvider);
-    db.collectionDao.addCard(
-      cardId,
-      amount: foil ? 0 : 1,
-      amountFoil: foil ? 1 : 0,
-    );
-    ref.read(scanProvider.notifier).confirmed(cardId);
+    ref.read(cardRepositoryProvider).addCard(
+          cardId,
+          language,
+          amount: foil ? 0 : 1,
+          amountFoil: foil ? 1 : 0,
+        );
+    ref.read(scanProvider.notifier).confirmed(cardId, language);
   }
 }

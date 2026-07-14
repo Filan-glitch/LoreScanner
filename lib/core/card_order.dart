@@ -33,3 +33,22 @@ int compareRarities(String a, String b) {
   final ranks = rarityRank(a).compareTo(rarityRank(b));
   return ranks != 0 ? ranks : a.compareTo(b);
 }
+
+/// Language-neutral ink keys. lorcanajson uses localized ink names
+/// (DE: Bernstein, Smaragd, …) and hyphen-joined dual inks
+/// ("Bernstein-Amethyst").
+const Map<String, String> _inkKeys = {
+  'Amber': 'amber', 'Bernstein': 'amber',
+  'Amethyst': 'amethyst',
+  'Emerald': 'emerald', 'Smaragd': 'emerald',
+  'Ruby': 'ruby', 'Rubin': 'ruby',
+  'Sapphire': 'sapphire', 'Saphir': 'sapphire',
+  'Steel': 'steel', 'Stahl': 'steel',
+};
+
+/// Canonical ink keys for a raw ink value; splits hyphen-joined duals.
+/// Unknown names are dropped.
+Set<String> canonicalInks(String raw) => {
+      for (final part in raw.split('-'))
+        if (_inkKeys[part.trim()] != null) _inkKeys[part.trim()]!,
+    };

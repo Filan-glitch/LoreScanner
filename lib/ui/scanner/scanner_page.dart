@@ -89,7 +89,14 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
             : LayoutBuilder(builder: (context, constraints) {
                 final size =
                     Size(constraints.maxWidth, constraints.maxHeight);
-                ref.read(scanProvider.notifier).controller?.widgetSize = size;
+                // Defer past build — mutating controller state during the
+                // build phase is a side effect; _onFrame skips frames
+                // until the size arrives.
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  ref.read(scanProvider.notifier).controller?.widgetSize =
+                      size;
+                });
                 return Stack(
                   fit: StackFit.expand,
                   children: [
@@ -110,7 +117,10 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
                         left: 16,
                         right: 16,
                         bottom: 24,
-                        child: ScanConfirmBar(cardId: scanState.cardId),
+                        child: ScanConfirmBar(
+                          cardId: scanState.cardId,
+                          language: scanState.language,
+                        ),
                       )
                     else
                       Positioned(
@@ -127,15 +137,17 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
   }
 }
 
-/// Live pipeline feedback under the frame: what the scanner is doing and
-/// how close a tracked card is to detection.
-class _StatusLine extends ConsumerWidget {
+/// Live pipeline feedback under the frame: coarse phase only. The card
+/// name deliberately stays out of this line — a tracked card can still be
+/// dropped by the stability window, and naming it here would promise a
+/// detection that may never surface.
+class _StatusLine extends StatelessWidget {
   const _StatusLine({required this.state});
 
   final ScanState state;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final streaming = state is ScanStreaming ? state as ScanStreaming : null;
     final phase = streaming?.phase ?? ScanPhase.searching;
@@ -146,16 +158,6 @@ class _StatusLine extends ConsumerWidget {
       ScanPhase.matching => ('Karte wird gesucht…', true),
       ScanPhase.tracking => ('Karte erkannt – kurz still halten', true),
     };
-
-    final trackedName = streaming?.trackingCardId == null
-        ? null
-        : ref
-            .watch(allCardsProvider)
-            .valueOrNull
-            ?.where((e) => e.card.id == streaming!.trackingCardId)
-            .firstOrNull
-            ?.card
-            .fullName;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -180,9 +182,7 @@ class _StatusLine extends ConsumerWidget {
               ],
               Flexible(
                 child: Text(
-                  phase == ScanPhase.tracking && trackedName != null
-                      ? trackedName
-                      : label,
+                  label,
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

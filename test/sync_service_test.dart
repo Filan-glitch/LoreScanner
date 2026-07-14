@@ -16,10 +16,14 @@ MockClient _client({
   String generatedOn = _generatedOn,
   bool metadataFails = false,
   bool allCardsFails = false,
+  Set<String> failLanguages = const {},
   void Function(String path)? onRequest,
 }) {
   return MockClient((request) async {
     onRequest?.call(request.url.path);
+    if (failLanguages.any((l) => request.url.path.contains('/$l/'))) {
+      return http.Response('down', 500);
+    }
     if (request.url.path.endsWith('metadata.json')) {
       if (metadataFails) return http.Response('gone', 404);
       return http.Response.bytes(
@@ -60,20 +64,20 @@ void main() {
   test('empty DB triggers full sync', () async {
     final result = await service(_client()).syncIfNeeded();
     expect(result, SyncResult.synced);
-    expect(await db.cardsDao.count(), 3);
+    expect(await db.cardsDao.countLanguage('de'), 3);
     expect(await db.getSetting(SettingKeys.lastGeneratedOn('de')),
         _generatedOn);
   });
 
   test('cards stored with searchName, ink, cardmarketId', () async {
     await service(_client()).syncIfNeeded();
-    final card = await db.cardsDao.byId(2);
+    final card = await db.cardsDao.byIdAndLanguage(2, 'de');
     expect(card, isNotNull);
     expect(card!.searchName, 'maechtiger zauberer');
     expect(card.ink, 'Amethyst');
     expect(jsonDecode(card.inksJson), ['Amethyst', 'Steel']);
     expect(card.cardmarketId, 102);
-    final promo = await db.cardsDao.byId(3);
+    final promo = await db.cardsDao.byIdAndLanguage(3, 'de');
     expect(promo!.cardmarketId, isNull);
     expect(promo.promoGrouping, 'D23');
   });
@@ -132,7 +136,7 @@ void main() {
       clock: () => later,
     ).syncIfNeeded();
     expect(result, SyncResult.failedWithCache);
-    expect(await db.cardsDao.count(), 3);
+    expect(await db.cardsDao.countLanguage('de'), 3);
   });
 
   test('network failure with empty DB = failedNoData', () async {
@@ -147,16 +151,31 @@ void main() {
     expect(result, SyncResult.synced);
   });
 
-  test('language switch re-syncs same card ids without PK conflict', () async {
-    // lorcanajson ids are identical across languages — the EN sync must
-    // replace the DE rows wholesale, not collide on cards.id (#device).
+  test('partial failure: empty language is retried within the 24h window',
+      () async {
+    // de succeeds, en fails — the shared throttle timestamp must not
+    // starve the still-empty language on the next launch.
+    final first =
+        await service(_client(failLanguages: {'en'})).syncIfNeeded();
+    expect(first, SyncResult.failedWithCache);
+    expect(await db.cardsDao.countLanguage('de'), 3);
+    expect(await db.cardsDao.countLanguage('en'), 0);
+
+    // Relaunch minutes later with the network healthy — en syncs now,
+    // not after the throttle window expires.
+    final second = await service(_client()).syncIfNeeded();
+    expect(second, SyncResult.synced);
+    expect(await db.cardsDao.countLanguage('en'), 3);
+  });
+
+  test('both languages sync side by side without PK conflict', () async {
+    // lorcanajson ids are identical across languages — (id, language) PK
+    // holds both permanently.
     await service(_client()).syncIfNeeded();
-    expect(await db.cardsDao.count(), 3);
-    await db.setSetting(SettingKeys.cardLanguage, 'en');
-    final result = await service(_client()).syncIfNeeded(force: true);
-    expect(result, SyncResult.synced);
-    expect(await db.cardsDao.count(), 3);
-    expect((await db.cardsDao.byId(1))!.language, 'en');
+    expect(await db.cardsDao.countLanguage('de'), 3);
+    expect(await db.cardsDao.countLanguage('en'), 3);
+    expect((await db.cardsDao.byIdAndLanguage(1, 'de'))!.language, 'de');
+    expect((await db.cardsDao.byIdAndLanguage(1, 'en'))!.language, 'en');
   });
 }
 
